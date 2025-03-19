@@ -2,10 +2,11 @@ import './index.scss'
 import store from '@/stores'
 import { observer } from 'mobx-react'
 import { useCallback, useEffect, useState } from 'react';
-import { Input, Radio, Space } from 'antd';
-import type { RadioChangeEvent } from 'antd';
+import { Input } from 'antd';
 
-import ReactHtmlParser from 'react-html-parser';
+import Questions from '../questions';
+import ReadQuestions from '../readQuestions'
+import WritteQuestions from '../writteQuestions';
 
 const { TextArea } = Input;
 
@@ -20,10 +21,16 @@ type textArr = {
   selection: Selection | null
 }
 
-const examContent = observer(() => {
+type propType = {
+  type: string;
+};
 
-  const [textArr, setTextArr] = useState(store.ExamStore.exam[0][0]);
-  const [title, setTitle] = useState(store.ExamStore.exam[0][0].title)
+const examContent = observer((props: propType) => {
+  const { type } = props;
+  const exam = store.ExamStore.getExam();
+
+  const [textArr, setTextArr] = useState(exam[0]);
+  const [title, setTitle] = useState(exam[0].title)
   const [selectedText, setSelectedText] = useState<string>('');
   const [flagTextArr, setFlagTextArr] = useState<textArr[]>([
     {
@@ -41,17 +48,24 @@ const examContent = observer(() => {
   const [isHightlight, setIsHightlight] = useState<boolean>(false);
   const [value, setValue] = useState<string>('A');
 
+  //字体大小
+  const [fontSize, setFontSize] = useState(store.ExamStore.FontSize);
+
   /*屏蔽浏览器默认右键事件*/
-  document.oncontextmenu = function (e) {
-    e = e || window.event;
-    return false;
-  };
+  // document.oncontextmenu = function (e) {
+  //   e = e || window.event;
+  //   return false;
+  // };
 
   useEffect(() => {
-    const index = +store.ExamStore.currentExamTitle[4] - 1;
-    setTextArr(store.ExamStore.exam[0][index]);
-    setTitle(store.ExamStore.exam[0][index].title);
-  },[store.ExamStore.currentExamTitle]);
+    setFontSize(store.ExamStore.FontSize);
+  },[store.ExamStore.FontSize]);
+
+  useEffect(() => {
+    const index = +store.ExamStore.currentExamTitle.slice(4, store.ExamStore.currentExamTitle.length - 1) - 1;
+    setTextArr(exam[index]);
+    setTitle(exam[index].title);
+  },[store.ExamStore.currentExamTitle, exam]);
 
   useEffect(() => {
     const span = document.querySelectorAll('.gapfilling-span');
@@ -102,7 +116,7 @@ const examContent = observer(() => {
     document.addEventListener('click', handleCloseMenu);
 
     return () => {
-        document.removeEventListener('click', handleCloseMenu);
+      document.removeEventListener('click', handleCloseMenu);
     };
   }, []);
 
@@ -205,6 +219,7 @@ const examContent = observer(() => {
 
     if(span && span.parentNode) {
       const spanContent = span.innerText;
+      //TODO:清除事件监听
       span.parentNode.removeChild(span);
       
       flagTextArr.forEach(item => {
@@ -220,7 +235,7 @@ const examContent = observer(() => {
 
   const handleClearAll = () => {
     const span = document.getElementById(`${selectedText}`);
-
+    //TODO:清除事件监听
     if(span && span.parentNode) {
       const parentText = span.parentNode.textContent || '';
       span.parentNode.textContent = parentText;
@@ -229,32 +244,22 @@ const examContent = observer(() => {
     setNoteText('');
   }
 
-  const onChange = (e: RadioChangeEvent) => {
-    console.log('radio checked', e.target.value);
-    setValue(e.target.value);
-  };
   return (
     <div className='pageContent'>
       <div className='title'>{store.ExamStore.currentExamTitle}</div>
-      <div className='content'>
-        <div >{ReactHtmlParser(title)}</div>
-        <div>
-          {
-            textArr.questionType == '1'
-            ? <Radio.Group onChange={onChange} value={value}>
-              <Space direction="vertical">
-                {
-                textArr.items.map((item, index) => (
-                  <Radio key={item.content} value={item.content}>
-                    {ReactHtmlParser(item.prefix)} {ReactHtmlParser(item.content)}
-                  </Radio>
-                ))
-              }
-              </Space>
-            </Radio.Group>
-            :<></>
-          }
-        </div>
+      <div className='content' style={{fontSize: `${fontSize}px`}}>
+        {
+          type === 'listen' ? (
+            <Questions {...{title, textArr}}></Questions>
+          ) : type === 'read' ? (
+            <ReadQuestions ></ReadQuestions>
+          ) : type === 'writte' ?(
+            <WritteQuestions {...{title, textArr}}></WritteQuestions>
+          ) : (
+            <></>
+          )
+        }
+          
       </div>
       {
       menuVisible 

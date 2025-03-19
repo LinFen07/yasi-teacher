@@ -1,0 +1,20 @@
+.examBox {
+  display: flex;
+  flex-flow: column;
+  height: 100vh;
+}
+
+.examHeader{
+  display: flex;
+  align-items: center;
+}
+
+.examContent{
+  flex: 1;
+  background-color: #dce5f6;
+}
+
+.footer {
+  height: 74px;
+  background-color: #dce5f6;
+}

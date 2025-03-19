@@ -1,0 +1,15 @@
+.readContent{
+  height: 100%;
+  display: flex;
+}
+
+.leftContent{
+  width: 50%;
+  height: 100%;
+  border-right: 1px solid #7e7e7e3f;
+  overflow: auto;
+}
+.rightContent{
+  width: 55%;
+  height: 100%;
+}

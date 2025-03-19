@@ -12,8 +12,17 @@ type pageType = {
   maxNum: number;
 }
 
-export default function footerNav() {
-  const exam = store.ExamStore.getExam();
+type propType = {
+  type: string;
+};
+
+export default function footerNav(props: propType) {
+  const { type } = props;
+  const exam = type === 'listen' 
+    ? (store.ExamStore.getListenExam())
+    : type === 'read' 
+    ? (store.ExamStore.getReadExam())
+    : (store.ExamStore.getWritteExam());
   let currentPage = store.ExamStore.currentExamIndex;
 
   const [curren, setCurren] = useState(currentPage);
@@ -31,15 +40,36 @@ export default function footerNav() {
   };
 
   let prevLen = 0
-  const initialPageArr = exam.map((part, index) => {
-    const {questionArr, currLen} = getQuestionArr(prevLen, part.correctArray ? part.correctArray.length : 1);
-    prevLen = currLen;
-    return {
-      title: `Part${index + 1}:`,
-      questionArr: questionArr,
-      maxNum: currLen
-    };
-  });
+  const initialPageArr = type === 'listen'
+    ? (exam.map((part, index) => {
+        //@ts-ignore
+        const {questionArr, currLen} = getQuestionArr(prevLen, part.correctArray ? part.correctArray.length : 1);
+        prevLen = currLen;
+        return {
+          title: `Part${index + 1}:`,
+          questionArr: questionArr,
+          maxNum: currLen
+        };
+      }))
+    : type === 'read' 
+    ? (exam.map((item, index) => {
+      //@ts-ignore
+      const {questionArr, currLen} = getQuestionArr(prevLen, item.questions.length);
+        prevLen = currLen;
+        return {
+          title: `Part${index + 1}:`,
+          questionArr: questionArr,
+          maxNum: currLen
+        }
+    }))
+    : (exam.map((item,index) => {
+      return {
+        title: `Part${index + 1}:`,
+          questionArr: [index + 1],
+          maxNum: index + 1
+      }
+    }));
+
   const [PageArr, setPageArr] = useState<Array<pageType>>([]);
 
   useEffect(() => {

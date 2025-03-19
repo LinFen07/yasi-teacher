@@ -9,7 +9,9 @@ import ErrorQuestions from "@/pages/errorQuestions";
 import ListeningExam from "@/pages/listeningExam";
 import Message from "@/pages/message";
 import UserInfo from "@/pages/userInfo";
-import WrittenExam from "@/pages/writtenExam";
+import ReadExam from "@/pages/readExam";
+import WritteExam from "@/pages/writte";
+import TestOver from "@/pages/testOver";
 
 // 快速导入工具函数
 const lazyLoad = (moduleName: string) => {
@@ -75,9 +77,17 @@ const routes: Array<Router> = [
     element: <ListeningExam/>
   },
   {
-    path: '/writtenExam',
-    element: <WrittenExam/>
-  }
+    path: '/readnExam',
+    element: <ReadExam/>
+  },
+  {
+    path: '/writteExam',
+    element: <WritteExam/>
+  },
+  {
+    path: '/testOver',
+    element: <TestOver/>
+  },
 ]
 
 

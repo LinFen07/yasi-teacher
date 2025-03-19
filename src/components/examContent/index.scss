@@ -21,18 +21,15 @@
 .content{
   width: 96%;
   flex: 1;
+  height: 300px;
   margin: auto;
   margin-top: 2vh;
   border-radius: 2vh;
   background-color: #fff;
-  overflow: auto;
+  overflow: hidden;
   text-align: left;
   padding: 2%;
   font-size: 18px;
-}
-
-.content label{
-  padding-right: 4px;
 }
 
 .textInput {

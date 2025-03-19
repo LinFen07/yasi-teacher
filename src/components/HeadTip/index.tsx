@@ -1,11 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router';
 
-import { Button, Space, Avatar, Slider, Modal } from 'antd'
-import { FieldTimeOutlined, SoundOutlined } from '@ant-design/icons'
+import { Button, Space, Avatar, Slider, Modal, Dropdown } from 'antd'
+import { FieldTimeOutlined, SoundOutlined, DownOutlined } from '@ant-design/icons'
+import type { MenuProps } from 'antd';
 
 import './index.scss'
 import store from '@/stores'
+
+import IntegerStep from '../fontSizeSetting';
+import stores from '@/stores';
+
+const items: MenuProps['items'] = [
+  {
+    label: (
+      <Space style={{ width: '400px' }} direction="vertical">
+        <IntegerStep />
+      </Space>
+    ),
+    key: '0',
+  }
+];
 
 type propType = {
     type: string;
@@ -39,9 +54,17 @@ function HeadTip(props: propType) {
 
   const finish = (type: string) => {
     if(type === 'listen'){
-      // navigate('/writtenExam');
-    };
+      navigate('/readnExam');
+      stores.ExamStore.correctListenAnswer();
+    }else if(type === 'read'){
+      navigate('/writteExam');
+      stores.ExamStore.correctReadAnswer();
+    }else if(type === 'writte'){
+      navigate('/testOver');
+    }
   };
+  
+  const handleSetting = () => {}
   
   return(
     <div className='head'>
@@ -73,13 +96,27 @@ function HeadTip(props: propType) {
       <div className='headRight'>
         <Space size={24}>
           <Button size='large' onClick={() => setModalOpen(true)}>Finish Text</Button>
-          <Button size='large' onClick={() => setModalOpen(true)}>Pause</Button>
+          {
+            props.type === 'listen'
+            ? <></>
+            : <Button size='large' onClick={() => setModalOpen(true)}>Pause</Button>
+          }
+          <div style={{fontSize: '16px'}}>
+            <Dropdown menu={{ items }} trigger={['click']}>
+              <a onClick={(e) => e.preventDefault()}>
+                <Space>
+                  Setting
+                  <DownOutlined />
+                </Space>
+              </a>
+            </Dropdown>
+          </div>
         </Space>
       </div>
       <Modal title="Basic Modal" open={isModalOpen} onOk={() => finish(props.type)} onCancel={() => {setModalOpen(false)}}>
       <p>You have selected to end this section of the test, click OK to progress to the next section or Cancel to return to the test.
       This function is not available in the real computer-delivered lELTs test</p>
-    </Modal>
+      </Modal>
     </div>
   );
 };
