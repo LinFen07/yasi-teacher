@@ -1,0 +1,40 @@
+.grading-container {
+  .paper-preview {
+    margin-bottom: 24px;
+    
+    h3 {
+      color: rgba(0, 0, 0, 0.85);
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+
+    > div {
+      background: #fafafa;
+      border-radius: 4px;
+    }
+  }
+
+  .ant-rate {
+    &.ant-rate-disabled .ant-rate-star {
+      color: #fadb14;
+    }
+
+    .ant-rate-star {
+      margin-right: 8px;
+      font-size: 24px;
+    }
+  }
+
+  .ant-form-item {
+    margin-bottom: 16px;
+
+    &-label {
+      font-weight: 500;
+    }
+  }
+
+  .ant-modal-footer {
+    border-top: none;
+    padding: 16px 24px;
+  }
+}
