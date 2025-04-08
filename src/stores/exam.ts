@@ -1,48 +1,13 @@
 import {  makeAutoObservable} from "mobx";
-
-type Items = {
-  content: string;
-  itemUuid: string;
-  prefix: string;
-  score: string;
-}
-
-export interface Exam {
-  name: string;
-  questionItems: Array<ExamType>;
-}
-
-export interface ExamType {
-  analyze: string;
-  correct: string;
-  correctArray: string[];
-  difficult: number;
-  gradeLevel: number;
-  id: number;
-  itemOrder: number;
-  items: Array<Items>;
-  questionType: string;
-  score: string;
-  subjectId: number;
-  title: string;
-  answer: string | null;
-}
-
-
-interface correct {
-  key: string;
-  question: number;
-  answer: string;
-  tag: string;
-  myAn: string;
-  score: string;
-}
+import { Exam, ExamType, correct} from '@/typings/exam'
 
 class ExamStore {
-
   constructor() {
     makeAutoObservable(this);
   }
+
+  //当前试卷ID
+  paperId = 0;
 
   //当前题目索引
   currentExamIndex = 1;
@@ -67,10 +32,20 @@ class ExamStore {
 
   //听力答案
   correctListen: Array<correct> = [];
+
+  //考生答案
+  studentListenAnswers: Array<string> = Array(50).fill('');
+  studentReadAnswers: Array<string> = Array(50).fill('');
+
   //阅读答案
   correctRead: Array<correct> = [];
   //写作答案
   correctWritte: Array<correct> = [];
+
+  //改变试卷id
+  changePaperId(id: number) {
+    this.paperId = id;
+  }
 
   addExam(exam: Array<Exam>) {
     this.exam = exam;
@@ -112,7 +87,6 @@ class ExamStore {
 
   updateListenExam(index: number, questionIndex: number, queston: ExamType) {
     this.listenExam[index].questionItems[questionIndex] = queston;
-    console.log(queston);
   }
 
   updateReadExam(index: number, questionIndex: number, queston: ExamType) {
@@ -143,19 +117,40 @@ class ExamStore {
 
   //判断听力答案
   isTrueListeneAnswer(){
+    let questionId = 1;
     this.listenExam.forEach((exam, index) => {
       exam.questionItems.forEach((question, questionIndex) => {
-        const correctAnswer = question.correct; // 获取正确答案
-        const userAnswer = question.answer ? question.answer : ''; // 获取用户答案
+        // 获取正确答案
+        const correctAnswer = question.correct ? question.correct : question.correctArray; 
+        // 获取用户答案
+        const userAnswer = this.studentListenAnswers[questionId];
 
-        this.correctListen.push({
-          key: `${index}-${questionIndex}`,
-          question: questionIndex + 1,
-          answer: correctAnswer,
-          tag: userAnswer === correctAnswer ? 'true' : 'false',
-          myAn: userAnswer,
-          score: userAnswer === correctAnswer? question.score : '0',
-        });
+        if(correctAnswer instanceof Array){
+          for(let i = 0; i < correctAnswer.length; i++){
+            let correctScore = Math.floor(+question.score / correctAnswer.length).toString();
+            this.correctListen.push({
+              key: `${index}-${questionIndex}`,
+              question: questionId,
+              answer: correctAnswer[i],
+              tag: userAnswer === correctAnswer[i] ? 'true' : 'false',
+              myAn: userAnswer,
+              score: userAnswer === correctAnswer[i] ? correctScore : '0',
+            });
+            questionId++;
+            console.log('questionId - userAnswer',questionId, userAnswer);
+          }
+        }else {
+          this.correctListen.push({
+            key: `${index}-${questionIndex}`,
+            question: questionId,
+            answer: correctAnswer,
+            tag: userAnswer === correctAnswer ? 'true' : 'false',
+            myAn: userAnswer,
+            score: userAnswer === correctAnswer ? question.score : '0',
+          });
+          questionId++;
+          console.log('questionId - userAnswer',questionId, userAnswer);
+        }
       });
     });
     console.log(this.correctListen);
@@ -178,6 +173,14 @@ class ExamStore {
         });
       });
     });
+  }
+
+  //考生改变听力答案
+  changeStudentListenAnswer(index: number, answer: string){
+    this.studentListenAnswers[index] = answer;
+  }
+  changeStudentReadAnswer(index: number, answer: string){
+    this.studentReadAnswers[index] = answer;
   }
 }
 

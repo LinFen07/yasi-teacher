@@ -6,6 +6,7 @@ class UserStore {
     cookies = '';
     key = '';
     name = '';
+    userId = 1;
 
     constructor() {
         makeAutoObservable(this);
@@ -31,5 +32,8 @@ class UserStore {
         this.name = name;
     }
 
+    setUserId(id: number) {
+        this.userId = id;
+    }
 }
 export default new UserStore();

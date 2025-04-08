@@ -1,7 +1,7 @@
 import './index.scss'
 import { useEffect, useState } from 'react';
 import ReactHtmlParser from 'react-html-parser';
-import type {ExamType} from '@/stores/exam';
+import { ExamType } from '@/typings/exam';
 import stores from '@/stores';
 
 import { Input } from 'antd';

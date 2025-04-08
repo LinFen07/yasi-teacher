@@ -2,7 +2,7 @@ import axios from "axios";
 
 const request = axios.create({
   baseURL: 'http://120.24.144.113:8668',
-  timeout: 30000
+  timeout: 30000,
 })
 
 export const post = (url: string, params: any) => {
@@ -12,7 +12,7 @@ export const post = (url: string, params: any) => {
     withCredentials: true,
     timeout: 30000,
     data: params,
-    headers: { 'Content-Type': 'application/json', 'request-ajax': true }
+    headers: { 'Content-Type': 'application/json', 'request-ajax': true,}
   }
   return request(query)
 }

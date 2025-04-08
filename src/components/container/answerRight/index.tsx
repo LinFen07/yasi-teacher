@@ -60,11 +60,7 @@ const columns: TableProps<DataType>['columns'] = [
   },
 ];
 
-
-
  function AnswerRight() {
-
-  
   const [data, setData] = useState<DataType[]>(stores.ExamStore.correctListen);
 
   useEffect(() => {

@@ -34,9 +34,9 @@ export default function Score() {
               </li>
             </ul>
             <ul onClick={hanldeScore}>
-            <button className='btn active'>听力报告</button>
-            <button className='btn'>阅读报告</button>
-            <button className='btn'>写作报告</button>
+            <button className='btn active'>考试报告</button>
+            {/* <button className='btn'>阅读报告</button>
+            <button className='btn'>写作报告</button> */}
             </ul>
           </div>
           <div className='rt'>

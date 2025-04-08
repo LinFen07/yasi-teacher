@@ -1,4 +1,4 @@
-import type { Exam } from '../stores/exam';
+import { Exam } from '@/typings/exam';
 
 export function computedPrevCount(title: string, exam: Array<Exam>): number {
   const index = +title.slice(4, title.length - 1) - 1;

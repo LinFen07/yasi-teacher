@@ -27,6 +27,7 @@ const Dashboard = () => {
     console.log(res);
     //@ts-ignore
     if(res.code == 1) {
+      stores.ExamStore.changePaperId(id);
       //@ts-ignore
       stores.ExamStore.addExam(res.response.titleItems);
       //添加听力录音

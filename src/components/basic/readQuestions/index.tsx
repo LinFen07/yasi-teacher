@@ -4,18 +4,16 @@ import { useEffect, useState, useRef } from 'react';
 import ReactHtmlParser from 'react-html-parser';
 import stores from '@/stores';
 import { observer } from 'mobx-react'
-
 import { runInAction } from 'mobx';
-
 import { computedPrevCount, computedBlanksPrevCount }from '@/utils/computedPrevCount';
 import { createInput } from '@/utils/createInput';
-
+import { submitStudentAnswer } from '@/utils/submitAnswer'
 
 const questions = () => {
+  //获取试卷
   const exam = stores.ExamStore.getReadExam();
-
+  //试卷下标
   const questionIndex = stores.ExamStore.currentExamIndex;
-
   const [readArr, setReadArr] = useState(exam[0]);
   const [questionArr, setQuestionArr] = useState(exam[0].questionItems);
   const titleRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -24,9 +22,10 @@ const questions = () => {
     const index = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
     setReadArr(exam[index]);
     setQuestionArr(exam[index].questionItems);
-    createInput(exam);
+    createInput(exam, 'read');
   },[stores.ExamStore.currentExamTitle]);
 
+  //点击下标自动跳转对应题目
   useEffect(() => {
     let prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
     let BlanksprevCount = computedBlanksPrevCount(prevCount, stores.ExamStore.currentExamTitle, exam);
@@ -46,8 +45,10 @@ const questions = () => {
     const examIndex = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
     
     let prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
-    console.log('prevCount', prevCount);
     const { value } = e.target;
+
+    //向数据提交答案
+    submitStudentAnswer(questionArr, index, value);
 
     const updatedQuestions = { ...questionArr[index] };
     updatedQuestions.answer = value;
@@ -62,9 +63,28 @@ const questions = () => {
     });
   };
 
+  const checkedOnChange = (index: number) => (checkedValues: any[]) =>{
+    let pre = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
+    const examIndex = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
+
+    //向数据提交答案
+    submitStudentAnswer(questionArr, index, checkedValues.toString());
+
+    const updatedQuestions = { ...questionArr[index] };
+    updatedQuestions.selectionsAnswer = checkedValues;
+    const newQuestionsArr = questionArr.map((question, idx) =>
+      idx === index ? updatedQuestions : question
+    );
+    setQuestionArr(newQuestionsArr);
+    stores.ExamStore.updateReadExam(examIndex, index, updatedQuestions);
+    runInAction(() => {
+      stores.ExamStore.correctListenAnswer.push(pre + index + 1);
+    });
+  }
+
   return (
     <div className='readContent'>
-        <div className='leftContent' >{ReactHtmlParser(readArr.name)}</div>
+        <div className='leftContent parsed-name' >{ReactHtmlParser(readArr.name)}</div>
         <div className='rightContent'>
         {
           questionArr.map((item,i) => {
@@ -87,7 +107,8 @@ const questions = () => {
                     </Radio.Group>
                     : item.questionType == '2' 
                     ? <Checkbox.Group style={{ width: '100%' }} 
-                      // value={questionArr.answer ? questionArr.answer : ''}
+                      onChange={checkedOnChange(i)} 
+                      value={item.selectionsAnswer ? item.selectionsAnswer : []}
                       options={item.items.map((opt) => ({
                       value: opt.prefix,
                       label: (

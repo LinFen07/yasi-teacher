@@ -60,6 +60,7 @@ function LoginRoute(props: Props) {
       mess = '登录成功';
       nav = '/layout/dashboard';
     } else {
+      console.log('注册', values);
       res = await fetchRegister(values);
       mess = '注册成功';
       nav = '/';
@@ -67,7 +68,9 @@ function LoginRoute(props: Props) {
 
     //@ts-ignore
     if(res.code == 1) {
+      // stores.UserStore.setUserId(res.data.id);
       const cookies = document.cookie;
+      console.log(cookies);
       stores.UserStore.login(cookies);
       stores.UserStore.setName(values.userName);
       message.success(mess);
@@ -144,6 +147,17 @@ function LoginRoute(props: Props) {
                       <Input 
                       prefix={<UserOutlined />} 
                       placeholder="真实姓名"
+                      size="large"
+                      className="lowin-input"
+                      />
+                    </Form.Item>
+                    <label>身份证</label>
+                    <Form.Item
+                      name="identity"
+                      rules={[{ required: true, message: '请输入身份证号码' }]}
+                    >
+                      <Input 
+                      placeholder="身份证号"
                       size="large"
                       className="lowin-input"
                       />
