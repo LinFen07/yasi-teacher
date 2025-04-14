@@ -3,6 +3,9 @@ import TurndownService from 'turndown';
 import { Table } from 'antd';
 import { ExamType } from '@/typings/exam';
 import './index.scss';
+import { computedPrevCount, computedTickPrevCount } from '@/utils/computedPrevCount';
+import stores from '@/stores';
+import { runInAction } from 'mobx';
 
 interface RecordType {
   key: number;
@@ -25,13 +28,16 @@ export default function tickQuestion(questionArr: ExamType) {
     const urlPattern = /(http?:\/\/[^\s]+)/g;
     const png = rows[0].match(urlPattern) as string[];
     const tableData: RecordType[] = [];
+    const prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    let tickPrevCount = computedTickPrevCount(prevCount, stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam)
 
     rows.forEach((row, index) => {
       const match = row.match(/^(\d+\.)(.+)$/gm);
       if (match) {
+        tickPrevCount++;
         tableData.push({
-          key: index,
-          question: match[0].trim(),
+          key: tickPrevCount,
+          question: match[0].replace(/\s*\d+\s*$/, ''),
         });
       }
     });
@@ -123,6 +129,7 @@ export default function tickQuestion(questionArr: ExamType) {
   const [dataSource, setDataSource] = useState<RecordType[]>(tableData);
 
   const handleCellClick = (record: RecordType, dataIndex: string) => {
+    stores.ExamStore.changeCurrent(record.key);
     const newData = dataSource.map((item) => {
       if (item.key === record.key) {
         // 清除同一行的所有选项
@@ -147,6 +154,9 @@ export default function tickQuestion(questionArr: ExamType) {
       return item;
     });
     setDataSource(newData);
+    runInAction(() => {
+      stores.ExamStore.correctListenAnswer.push(record.key);
+    });
   };
 
   const mergedColumns = columns.map((col) => {

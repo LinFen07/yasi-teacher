@@ -16,17 +16,23 @@ export default function questions() {
   const exam = stores.ExamStore.getWritteExam();
 
   const [title, setTitle] = useState(exam[0].name);
+  const [content, setContent] = useState(exam[0].questionItems[0].title);
   const [value, setValue] = useState('');
 
   useEffect(() => {
     const index = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
     console.log(exam)
     setTitle(exam[index].name);
+    setContent(exam[index].questionItems[0].title);
   },[stores.ExamStore.currentExamTitle, exam]);
 
   return (
     <div className='readContent'>
-        <div className='leftContent'>{ReactHtmlParser(title)}</div>
+        <div className='leftContent'>
+          
+          {ReactHtmlParser(title)}
+          {ReactHtmlParser(content)}
+        </div>
         <TextArea
           className='rightContent'
           value={value}

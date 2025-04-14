@@ -26,6 +26,7 @@ class ExamStore {
   listenExam: Array<Exam> = [];
   readExam: Array<Exam> = [];
   wirrteExam: Array<Exam> = [];
+  currentExam: Array<Exam> = [];
 
   //已完成题目数组
   correctListenAnswer: Array<number> = [];
@@ -53,6 +54,11 @@ class ExamStore {
     this.tableFlag = !this.tableFlag;
   }
 
+  //改变当前试卷
+  changeCurrentExam(exam: Array<Exam>) {
+    this.currentExam = exam;
+  }
+
   //改变试卷id
   changePaperId(id: number) {
     this.paperId = id;
@@ -72,14 +78,17 @@ class ExamStore {
   }
 
   getListenExam(){
+    this.changeCurrentExam(this.listenExam);
     return this.listenExam;
   }
 
   getReadExam(){
+    this.changeCurrentExam(this.readExam);
     return this.readExam;
   }
 
   getWritteExam(){
+    this.changeCurrentExam(this.wirrteExam);
     return this.wirrteExam;
   }
 

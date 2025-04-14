@@ -112,23 +112,54 @@ export default function DragQuestion(questionArr: ExamType) {
   const [droppedItems, setDroppedItems] = useState<{ questionIndex: number; option: string; originalIndex: number }[]>([]);
 
   const handleDrop = (item: { option: string; index: number }, questionIndex: number) => {
-    // 检查该选项是否已经被使用
-    if (droppedItems.some(droppedItem => droppedItem.option === item.option)) {
-      return;
-    }
-
-    setDroppedItems((prevItems) => [
-      ...prevItems.filter(droppedItem => droppedItem.option !== item.option),
-      { questionIndex, option: item.option, originalIndex: item.index }
-    ]);
+    setDroppedItems((prevItems) => {
+      // 查找现有项
+      const existingItem = prevItems.find(droppedItem => droppedItem.questionIndex === questionIndex);
+  
+      let newItems = prevItems;
+  
+      // 如果存在现有项，将其移回 localOptions 并从 droppedItems 中移除
+      if (existingItem) {
+        const originalIndex = existingItem.originalIndex;
+         // 将现有项移回 localOptions 的原始位置
+        setLocalOptions((prevOptions) => {
+        const newOptions = [...prevOptions];
+        newOptions.splice(originalIndex, 0, existingItem.option);
+        return newOptions;
+      });
+        newItems = prevItems.filter(droppedItem => droppedItem.questionIndex !== questionIndex);
+      }
+  
+      // 添加新项
+      newItems = [
+        ...newItems.filter(droppedItem => droppedItem.option !== item.option),
+        { questionIndex, option: item.option, originalIndex: item.index }
+      ];
+  
+      // 返回新的 droppedItems 状态
+      return newItems;
+    });
     // 移除已拖拽的选项
     setLocalOptions((prevOptions) => prevOptions.filter(option => option !== item.option));
   };
 
   const handleRemove = (item: { option: string; index: number }) => {
     setDroppedItems((prevItems) => prevItems.filter(droppedItem => droppedItem.option !== item.option));
+
     // 将选项移回原始位置
-    setLocalOptions((prevOptions) => [...prevOptions, item.option]);
+    setLocalOptions((prevOptions) => {
+      const newOptions = [...prevOptions];
+      // 找到该选项的原始索引
+      const originalIndex = droppedItems.find(droppedItem => droppedItem.option === item.option)?.originalIndex;
+      if (originalIndex !== undefined) {
+        // 在原始索引位置插入选项
+        newOptions.splice(originalIndex, 0, item.option);
+      } else {
+        // 如果找不到原始索引，直接添加到末尾
+        newOptions.push(item.option);
+      }
+      return newOptions;
+    });
   };
 
   return (

@@ -18,7 +18,6 @@ const questions = () => {
   const [questionsArr, setQuestionArr] = useState(listensArr.questionItems);
   const questionIndex = stores.ExamStore.currentExamIndex;
   const titleRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const tableRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   useEffect(() => {
     const index = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
@@ -102,7 +101,7 @@ const questions = () => {
               <div >
                 {
                   questionArr.questionType == '1'
-                  ? (<Radio.Group 
+                  ? (<Radio.Group style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
                       onChange={onChange(index)} 
                       value={questionArr.answer ? questionArr.answer : ''}
                       options={questionArr.items.map((opt) => ({
@@ -117,7 +116,7 @@ const questions = () => {
                       }))}>
                     </Radio.Group>) 
                     : questionArr.questionType == '2' 
-                    ? <Checkbox.Group style={{ width: '100%' }} 
+                    ? <Checkbox.Group style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
                       onChange={checkedOnChange(index)} 
                       value={questionArr.selectionsAnswer ? questionArr.selectionsAnswer : []}
                       options={questionArr.items.map((opt) => ({

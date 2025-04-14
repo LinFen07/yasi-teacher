@@ -22,3 +22,16 @@ export function computedBlanksPrevCount(pre: number, title: string, exam: Array<
     }
   return pre;
 }
+export function computedTickPrevCount(pre: number, title: string, exam: Array<Exam>){
+  const index = +title.slice(4, title.length - 1) - 1;
+    for(let j = 0; j < exam[index].questionItems.length; j++){
+      if(exam[index].questionItems[j].topicType == '5') return pre;
+      else if(
+        exam[index].questionItems[j].questionType == '2' 
+        || exam[index].questionItems[j].questionType == '4'
+      ) 
+        pre += exam[index].questionItems[j].correctArray.length;
+      else pre++;
+    }
+  return pre;
+}
