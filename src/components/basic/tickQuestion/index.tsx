@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TurndownService from 'turndown';
 import { Table } from 'antd';
 import { ExamType } from '@/typings/exam';
 import './index.scss';
-import { computedPrevCount, computedTickPrevCount } from '@/utils/computedPrevCount';
+import { computedTickPrevCount } from '@/utils/computedPrevCount';
 import stores from '@/stores';
 import { runInAction } from 'mobx';
 
@@ -22,14 +22,14 @@ interface RecordType {
 }
 
 export default function tickQuestion(questionArr: ExamType) {
+  const PrevCount = computedTickPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam)
   const parseMarkdownToTableData = (markdown: string) => {
     const rows = markdown.trim().split('\n');
     const questionTitle = rows[2];
     const urlPattern = /(http?:\/\/[^\s]+)/g;
     const png = rows[0].match(urlPattern) as string[];
     const tableData: RecordType[] = [];
-    const prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
-    let tickPrevCount = computedTickPrevCount(prevCount, stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam)
+    let tickPrevCount = PrevCount;
 
     rows.forEach((row, index) => {
       const match = row.match(/^(\d+\.)(.+)$/gm);
@@ -125,11 +125,34 @@ export default function tickQuestion(questionArr: ExamType) {
   const turndownService = new TurndownService();
   const markdown = turndownService.turndown(questionArr.title);
   const { tableData, png, questionTitle } = parseMarkdownToTableData(markdown);
-
-  const [dataSource, setDataSource] = useState<RecordType[]>(tableData);
+  const [ studentAnswers, setStudentAnswers ] = useState<string[]>(stores.AnswerStore.tickAnswers);
+  const [dataSource, setDataSource] = useState<RecordType[]>(() => {
+    return tableData.map((item, index) => {
+      const answer = studentAnswers[index];
+      if (answer) {
+        return {
+          ...item,
+          [answer]: '√',
+        };
+      }
+      return item;
+    });
+  });
+  
+  useEffect(() => {
+    return () => {
+      console.log(stores.AnswerStore.tickAnswers.toString());
+    }
+  },[])
 
   const handleCellClick = (record: RecordType, dataIndex: string) => {
     stores.ExamStore.changeCurrent(record.key);
+    setStudentAnswers((prevAnswers) => {
+      const newAnswers = [...prevAnswers];
+      newAnswers[record.key - PrevCount - 1] = dataIndex;
+      stores.AnswerStore.tickAnswers = [...newAnswers]
+      return newAnswers;
+    });
     const newData = dataSource.map((item) => {
       if (item.key === record.key) {
         // 清除同一行的所有选项
