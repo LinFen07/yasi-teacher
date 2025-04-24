@@ -10,12 +10,12 @@ import { InputNumber } from 'antd';
  * @param {number} min - 最低分
  * @param {number} max - 最高分
  */
-const ScoreInput = ({ 
-  value, 
-  onChange, 
+const ScoreInput = ({
+  value,
   disabled = false,
   min = 0,
-  max = 100
+  max = 100,
+  onChange
 }) => {
   return (
     <InputNumber

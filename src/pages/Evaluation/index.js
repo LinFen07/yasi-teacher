@@ -1,25 +1,24 @@
 import React, { useState, useEffect } from "react";
-import ReactQuill from 'react-quill';
+import { getConfrim } from "../../store/tasks";
 import 'react-quill/dist/quill.snow.css';
-import { Table, Button, Tag, Card, message, Spin, Select, Statistic, Breadcrumb } from "antd";
+import { Table, Button, Tag, Card, Spin, Select, Statistic, Breadcrumb } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import GradingPanel from "../../components/GradingPanel";
 import ViewGradedPaper from "../../components/ViewGradedPaper";
-import { fetchCompositionInfo, fetchArticle, fetchAllAppraises } from '../../store/tasks';
+import { fetchCompositionInfo, fetchArticle, updatePaperStatus, getAppraise } from '../../store/tasks';
 import { putAppraise } from "../../utils/appraise";
 import { postScore } from "../../utils/score";
 import axios from "axios";
 const { Countdown } = Statistic;
 
 const Evaluation = () => {
-  const { currentTask, appraise } = useSelector(state => state.tasks); // 从 Redux store 中获取 appraise
+  const { currentTask, appraise } = useSelector(state => state.tasks);
   const [papers, setPapers] = useState([
     {
-      id: 1,
+      id: 31,
       studentName: "张三",
       studentId: "S001",
       paperName: "雅思模拟试卷1",
-      score: 92,
       status: "已阅",
       questions: [
         { id: 1, number: '一', points: 20, score: 18 },
@@ -29,11 +28,10 @@ const Evaluation = () => {
       gradedTime: '2023-05-15 14:30'
     },
     {
-      id: 2,
+      id: 25,
       studentName: '李四',
       studentId: 'S002',
       paperName: '雅思模拟试卷2',
-      score: 0,
       status: '待阅',
       questions: [
         { id: 1, number: '一', points: 20, score: undefined, grader: undefined },
@@ -43,11 +41,10 @@ const Evaluation = () => {
       gradedTime: ''
     },
     {
-      id: 3,
+      id: 28,
       studentName: '王五',
       studentId: 'S003',
       paperName: '雅思模拟试卷1',
-      score: 0,
       status: '待阅',
       questions: [
         { id: 1, number: '听力', points: 30, score: undefined, grader: undefined, comment: undefined },
@@ -66,32 +63,25 @@ const Evaluation = () => {
   const [refreshFlag, setRefreshFlag] = useState(false);
   const [editorContent, setEditorContent] = useState('');
   const [flag, setFlag] = useState(false);
-  // 默认选中第一个试卷
+
   useEffect(() => {
     const fetchInitialPapers = async () => {
       setEssayLoading(true);
       try {
-        // 这里模拟API请求获取试卷数据
-        // const response = await request.get('/api/papers');
-        // setPapers(response.data);
-
-        // 验证数据格式并设置第一个试卷
-        if (Array.isArray(papers) && papers.length > 0) {
-          const firstPaper = papers.find(p => p?.id) || papers[0];
-          const validatedPaper = {
-            ...firstPaper,
-            name: firstPaper.name || firstPaper.studentName || '未知考生',
-            status: firstPaper.status || '待阅'
-          };
-
-          setCurrentPaper(validatedPaper);
-          // 始终默认进入列表模式
-          if (flag === false) {
-            setViewMode('list');
-          } else {
-            setViewMode('view');
-            setFlag(false)
+        if (flag === false) {
+          if (Array.isArray(papers) && papers.length > 0) {
+            const firstPaper = papers.find(p => p?.id) || papers[0];
+            const validatedPaper = {
+              ...firstPaper,
+              name: firstPaper.name || firstPaper.studentName || '未知考生',
+              status: firstPaper.status || '待阅'
+            };
+            setCurrentPaper(validatedPaper);
           }
+          setViewMode('list');
+        } else {
+          setViewMode('view');
+          setFlag(false);
         }
       } catch (error) {
         console.error('初始化试卷数据失败:', error);
@@ -100,85 +90,116 @@ const Evaluation = () => {
         setEssayLoading(false);
       }
     };
-
     fetchInitialPapers();
-  }, [papers]); // 依赖papers数组
+  }, [papers]);
 
   const dispatch = useDispatch();
   const userId = 1;
   useEffect(() => {
-    dispatch(fetchCompositionInfo());
-    dispatch(fetchArticle(userId));
-    dispatch(fetchAllAppraises());
-  }, [dispatch, refreshFlag]); // 添加 refreshFlag 作为依赖
+    dispatch(fetchCompositionInfo(31));
+    dispatch(fetchArticle(userId, null));
+    dispatch(getAppraise());
 
-  const handleGradeSubmit = (values) => {
-    setGradeLoading(true);
-    const updatedPapers = papers.map(p =>
-      p.id === currentPaper.id ? {
-        ...p,
-        score: values.score,
-        status: '已阅',
-        gradedTime: new Date().toLocaleString()
-      } : p
-    );
-    const appraiseData = putAppraise(values.comment, currentPaper.id);
-    // 触发异步 action
-    dispatch(appraiseData);
-    const score = postScore(31, 20);
-    score();
-    setPapers(updatedPapers);
-
-    const nextPaper = updatedPapers.find(p =>
-      p.id !== currentPaper.id && p.status === '待阅'
-    );
-
-    if (nextPaper) {
-      const resetPaper = {
-        ...nextPaper,
-        score: undefined,
-        comment: undefined,
-        questions: nextPaper.questions.map(q => ({
-          number: q.number,
-          points: q.points,
-          score: undefined,
-          grader: undefined
-        }))
-      };
-      setCurrentPaper(resetPaper);
-      setTimeout(() => {
-        setGradeLoading(false);
-        message.success('已自动跳转到下一份试卷');
-      }, 500);
-    } else {
-      setGradeLoading(false);
-      message.success({
-        content: '批改已完成',
-        duration: 3,
-      });
-      setTimeout(() => {
-        setViewMode('list');
-      }, 500);
+    if (viewMode === 'view' && currentPaper) {
+      dispatch(getConfrim({
+        paperId: currentPaper.id,
+        questionId: currentPaper.questions[0]?.id,
+        studentId: currentPaper.studentId
+      }));
     }
+  }, [dispatch, refreshFlag, viewMode, currentPaper]);
+
+  const [isEditingMode, setIsEditingMode] = useState(false);
+
+  const handleGradeSubmit = async (values) => {
+    setGradeLoading(true);
+    try {
+      const updatedPapers = papers.map(p =>
+        p.id === currentPaper.id ? {
+          ...p,
+          score: values.score,
+          status: values.isEditingMode ? p.status : '已阅',
+          gradedTime: values.isEditingMode ? p.gradedTime : new Date().toLocaleString()
+        } : p
+      );
+
+      if (!values.isEditingMode) {
+        const appraiseData = putAppraise(values.comment, currentPaper.id);
+        await dispatch(appraiseData);
+        await dispatch(updatePaperStatus({
+          id: currentPaper.id,
+          status: '已阅',
+          score: values.score,
+          gradedTime: new Date().toLocaleString()
+        }));
+        await postScore(currentPaper.id, values.score)();
+
+        const nextPaper = updatedPapers.find(p =>
+          p.paperName === currentPaper.paperName &&
+          p.id !== currentPaper.id &&
+          p.status === '待阅'
+        );
+
+        setPapers(updatedPapers);
+
+        if (nextPaper) {
+          if (flag === false) {
+            const resetPaper = {
+              ...nextPaper,
+              score: undefined,
+              comment: undefined,
+              questions: nextPaper.questions.map(q => ({
+                number: q.number,
+                points: q.points,
+                score: undefined,
+                grader: undefined
+              }))
+            };
+            setCurrentPaper(resetPaper);
+            setViewMode('grade');
+          }
+          setTimeout(() => {
+            setGradeLoading(false);
+            setEditorContent('');
+          }, 800);
+        } else {
+          if (flag === false) {
+            setViewMode('list');
+          }
+          setGradeLoading(false);
+          setEditorContent('');
+        }
+      }
+    } catch (error) {
+      console.error('操作失败:', error);
+      setGradeLoading(false);
+    }
+  };
+
+  // 新增筛选函数
+  const filterPendingPapers = () => {
+    return papers.filter(paper => paper.status === '待阅' && paper.paperName === (selectedPaper || papers[0]?.paperName));
   };
 
   const handleStartGrading = () => {
     setEssayLoading(true);
     try {
-      const firstPendingPaper = papers.find(p => p.status === '待阅');
-      if (firstPendingPaper) {
+      const pendingPapers = filterPendingPapers();
+      if (pendingPapers.length > 0) {
+        const firstPendingPaper = pendingPapers[0];
         setCurrentPaper(firstPendingPaper);
         setViewMode('grade');
       } else {
-        message.info('当前没有待阅试卷');
+        console.log('没有待阅的试卷');
       }
     } finally {
       setEssayLoading(false);
     }
   };
 
-  // 新增编辑处理函数
   const handleEditPaper = (restoredData) => {
+    setIsEditingMode(true);
+    setFlag(true)
     setCurrentPaper({
       ...currentPaper,
       isEditing: true
@@ -187,6 +208,7 @@ const Evaluation = () => {
   };
 
   const handleCancelEdit = () => {
+    setIsEditingMode(false);
     setCurrentPaper({
       ...currentPaper,
       isEditing: false
@@ -197,7 +219,6 @@ const Evaluation = () => {
   return (
     <Spin spinning={gradeLoading || essayLoading}>
       <div style={{ padding: '24px', display: 'flex', gap: '16px' }}>
-        {/* 评阅区域 */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {viewMode === 'list' && (
             <Card>
@@ -239,12 +260,13 @@ const Evaluation = () => {
                       value: name,
                       label: name
                     }))}
-                    onChange={(value) => setSelectedPaper(value)}
-                  />
+                    onChange={value => setSelectedPaper(value)}
+                  >
+                  </Select>
                   <Button
                     type="primary"
                     onClick={handleStartGrading}
-                    disabled={!papers.some(p => p.status === '待阅')}
+                    disabled={!filterPendingPapers().length}
                   >
                     开始批阅
                   </Button>
@@ -252,14 +274,9 @@ const Evaluation = () => {
                 <Table
                   columns={[
                     {
-                      title: '考生及试卷',
-                      key: 'studentAndPaper',
-                      render: (_, record) => (
-                        <div>
-                          <div>{record.studentName}</div>
-                          <div style={{ color: '#888' }}>{record.paperName}</div>
-                        </div>
-                      ),
+                      title: '考生',
+                      key: 'student',
+                      render: (_, record) => record.studentName,
                     },
                     {
                       title: '状态',
@@ -285,8 +302,7 @@ const Evaluation = () => {
                             } finally {
                               setEssayLoading(false);
                             }
-                          }}
-                        >
+                          }}>
                           {record.status === '已阅' ? '查看' : '评阅'}
                         </Button>
                       ),
@@ -295,7 +311,6 @@ const Evaluation = () => {
                   dataSource={papers
                     .filter(p => p.paperName === (selectedPaper || papers[0]?.paperName))
                     .sort((a, b) => {
-                      // 未评阅的排在前面
                       if (a.status === '待阅' && b.status !== '待阅') return -1;
                       if (a.status !== '待阅' && b.status === '待阅') return 1;
                       return 0;
@@ -306,7 +321,6 @@ const Evaluation = () => {
             </Card>
           )}
 
-          {/* 评阅模式 */}
           {viewMode === 'grade' && currentPaper && (
             <GradingPanel
               paperData={currentPaper}
@@ -317,14 +331,14 @@ const Evaluation = () => {
               setFlag={setFlag}
             />
           )}
-          {/* 查看模式 */}
+
           {viewMode === 'view' && currentPaper && (
             <ViewGradedPaper
               paperData={currentPaper}
               onBack={() => setViewMode('list')}
               onEdit={handleEditPaper}
               originalData={papers.find(p => p.id === currentPaper.id)}
-              appraiseData={Array.isArray(appraise) ? appraise : []}
+              appraiseData={appraise.response ? appraise.response.items : []}
             />
           )}
         </div>
@@ -334,4 +348,3 @@ const Evaluation = () => {
 };
 
 export default Evaluation;
-
