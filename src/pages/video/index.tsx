@@ -13,6 +13,7 @@ export default function Video() {
     console.log(id);
     const fetchExamData = async () => {
       try {
+        stores.ExamStore.changePaperId(+id);
         const res = await select(+id);
         console.log(res);
         //@ts-ignore

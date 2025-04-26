@@ -4,6 +4,9 @@ export const submitAnswer = (data: StudentAnswer) => {
   return request({
     url: '/api/student/studentAnswer/addStudentAnswer',
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
     data: `isCorrect=${data.isCorrect}&paperId=${data.paperId}&questionId=${data.questionId}&score=${data.score}&studentAnswer=${data.studentAnswer}&studentId=${data.studentId}`,
   })
 }

@@ -18,8 +18,10 @@ export function submitStudentSelectAnswer(
 ): void {
   Object.assign(studentAnswer, {
     isCorrect: value == questionsArr[index].correct  ? 1 : 0,
+    paperId: stores.ExamStore.paperId,
     questionId: questionsArr[index].id,
     studentAnswer: value,
+    studentId: stores.UserStore.userId,
     score: questionsArr[index].score
   });
 
@@ -34,9 +36,26 @@ export function submitStudentBlankAnswer(
 ): void {
   Object.assign(studentAnswer, {
     isCorrect: value == questionArr.correctArray[correctIndex]  ? 1 : 0,
+    paperId: stores.ExamStore.paperId,
     questionId: questionArr.items[correctIndex].itemUuid,
     studentAnswer: value,
+    studentId: stores.UserStore.userId,
     score: value == questionArr.correctArray[correctIndex] ? questionArr.items[correctIndex].score : '0',
   });
   stores.AnswerStore.changeAnswer(prevCount + i + 1, studentAnswer);
+}
+
+export function submitStudentWritteAnswer(
+  questionArr: ExamType, 
+  index: number, 
+  value: string
+): void {
+  Object.assign(studentAnswer, {
+    isCorrect: value ? 1 : 0,
+    paperId: stores.ExamStore.paperId,
+    questionId: questionArr.id,
+    studentAnswer: value,
+    studentId: stores.UserStore.userId,
+  });
+  stores.AnswerStore.changeStudentWritteAnswer(index, studentAnswer);
 }

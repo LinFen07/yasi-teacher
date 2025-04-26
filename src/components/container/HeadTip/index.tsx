@@ -57,13 +57,14 @@ function HeadTip(props: propType) {
     if(type === 'listen'){
       navigate('/readnExam',{ replace: true });
       requestConcurrency(stores.AnswerStore.completedAnswers);
-      stores.ExamStore.isTrueListeneAnswer();
+      stores.AnswerStore.clearAnswers();
     }else if(type === 'read'){
       navigate('/writteExam',{ replace: true });
-      stores.ExamStore.isTrueReadAnswer();
+      requestConcurrency(stores.AnswerStore.completedAnswers);
+      stores.AnswerStore.clearAnswers();
     }else if(type === 'writte'){
       navigate('/testOver',{ replace: true });
-      // console.log(stores.ExamStore.correctWritte)
+      requestConcurrency(stores.AnswerStore.writingAnswers);
     }
     store.ExamStore.changeCurrent(1);
     store.ExamStore.changeCurrentTitle('Part1:');

@@ -5,6 +5,7 @@ import { ExamType } from '@/typings/exam';
 import stores from '@/stores';
 
 import { Input } from 'antd';
+import { submitStudentWritteAnswer } from '@/utils/submitAnswer';
 const { TextArea } = Input;
 export default function questions() {
   const exam = stores.ExamStore.getWritteExam();
@@ -15,14 +16,13 @@ export default function questions() {
 
   useEffect(() => {
     const index = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
-    console.log(exam)
     setTitle(exam[index].name);
     setContent(exam[index].questionItems[0].title);
     if(index === 1)
-      stores.ExamStore.changeStudentWritteAnswer(0, value);
+      submitStudentWritteAnswer( exam[index].questionItems[0], 0, value);
     else
-      stores.ExamStore.changeStudentWritteAnswer(1, value);
-    setValue(stores.ExamStore.correctWritte[index]);
+      submitStudentWritteAnswer( exam[index].questionItems[0], 1, value);
+    setValue(stores.AnswerStore.writingAnswers[index].studentAnswer);
   },[stores.ExamStore.currentExamTitle, exam]);
 
   return (

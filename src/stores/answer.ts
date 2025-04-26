@@ -14,9 +14,21 @@ class AnswerStore {
   //已完成的题目
   completedAnswers: Array<StudentAnswer> = Array(41).fill('');
 
+  //写作答案
+  writingAnswers: Array<StudentAnswer> = Array(3).fill('');
+
   //改变答案
   changeAnswer(index: number, answer: StudentAnswer) {
     this.completedAnswers[index] = answer;
+  }
+
+  //提交完将答案清空
+  clearAnswers() {
+    this.completedAnswers = Array(41).fill('');
+  }
+
+  changeStudentWritteAnswer(index: number, answer: StudentAnswer){
+    this.writingAnswers[index] = answer;
   }
 }
 

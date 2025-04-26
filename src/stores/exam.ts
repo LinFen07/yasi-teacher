@@ -37,14 +37,8 @@ class ExamStore {
   studentListenAnswers: Array<string> = Array(50).fill('');
   studentReadAnswers: Array<string> = Array(50).fill('');
 
-  //考生得分
-  studentListenScore: Array<string> = Array(50).fill('');
-  studentReadScore: Array<string> = Array(50).fill('');
-
   //阅读答案
   correctRead: Array<correct> = [];
-  //写作答案
-  correctWritte: Array<string> = Array(3).fill('');
 
   //改变当前试卷
   changeCurrentExam(exam: Array<Exam>) {
@@ -127,86 +121,12 @@ class ExamStore {
     return this.listenAudio;
   }
 
-  //判断听力答案
-  isTrueListeneAnswer(){
-    let questionId = 1;
-    this.listenExam.forEach((exam, index) => {
-      exam.questionItems.forEach((question, questionIndex) => {
-        // 获取正确答案
-        const correctAnswer = question.correct ? question.correct : question.correctArray; 
-        // 获取用户答案
-        const userAnswer = this.studentListenAnswers[questionId];
-
-        if(correctAnswer instanceof Array){
-          for(let i = 0; i < correctAnswer.length; i++){
-            let correctScore = Math.floor(+question.score / correctAnswer.length).toString();
-            this.correctListen.push({
-              key: `${index}-${questionIndex}`,
-              question: questionId,
-              answer: correctAnswer[i],
-              tag: userAnswer === correctAnswer[i] ? 'true' : 'false',
-              myAn: userAnswer,
-              score: userAnswer === correctAnswer[i] ? correctScore : '0',
-            });
-            questionId++;
-            console.log('questionId - userAnswer',questionId, userAnswer);
-          }
-        }else {
-          this.correctListen.push({
-            key: `${index}-${questionIndex}`,
-            question: questionId,
-            answer: correctAnswer,
-            tag: userAnswer === correctAnswer ? 'true' : 'false',
-            myAn: userAnswer,
-            score: userAnswer === correctAnswer ? question.score : '0',
-          });
-          questionId++;
-          console.log('questionId - userAnswer',questionId, userAnswer);
-        }
-      });
-    });
-    console.log(this.correctListen);
-  }
-
-  //判断阅读答案
-  isTrueReadAnswer(){
-    this.readExam.forEach((exam, index) => {
-      exam.questionItems.forEach((question, questionIndex) => {
-        const correctAnswer = question.correct; // 获取正确答案
-        const userAnswer = question.answer ? question.answer : ''; // 获取用户答案
-
-        this.correctRead.push({
-          key: `${index}-${questionIndex}`,
-          question: questionIndex + 1,
-          answer: correctAnswer,
-          tag: userAnswer === correctAnswer ? 'true' : 'false',
-          myAn: userAnswer,
-          score: userAnswer === correctAnswer? question.score : '0',
-        });
-      });
-    });
-  }
-
   //考生改变听力答案
   changeStudentListenAnswer(index: number, answer: string){
     this.studentListenAnswers[index] = answer;
   }
   changeStudentReadAnswer(index: number, answer: string){
     this.studentReadAnswers[index] = answer;
-  }
-
-  changeStudentWritteAnswer(index: number, answer: string){
-    this.correctWritte[index] = answer;
-  }
-
-  changeStudentListenScore(index: number, correct: string, score: string){
-    this.studentListenScore[index] = 
-      this.studentListenAnswers[index] == correct ? score : '0';
-  }
-
-  changeStudentReadScore(index: number, correct: string, score: string){
-    this.studentReadScore[index] = 
-      this.studentReadAnswers[index] == correct ? score : '0';
   }
 }
 

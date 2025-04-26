@@ -22,7 +22,6 @@ const Dashboard = () => {
   },[])
 
   const handleConfirmExam = async(id: number) => {
-    stores.ExamStore.changePaperId(id);
     window.open(`/video?id=${id}`, '_blank');
 
     // 请求全屏
