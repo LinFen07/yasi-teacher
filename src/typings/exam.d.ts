@@ -46,3 +46,14 @@ export type StudentAnswer = {
   studentId: number,
   score: string
 }
+
+export type textArr = {
+  text: string;
+  isHightlight: boolean;
+  note: string;
+  menuPosition: {
+    x: number;
+    y: number;
+  };
+  selection: Selection | null
+}

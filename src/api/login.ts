@@ -1,15 +1,15 @@
 import { request } from "@/utils/request";
 
 export const fetchLogin =  
-// (loginForm: any) => postWithLoadTip(`/api/user/login`, loginForm)
 
 (loginForm: Object) => {
     return request({
         url: '/api/user/login',
         method: 'POST',
-        data: loginForm
+        data: loginForm,
       })
 }
+
 
 export const fetchLogout = async() => {
   return request({

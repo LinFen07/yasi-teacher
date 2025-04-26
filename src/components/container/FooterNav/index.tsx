@@ -2,10 +2,8 @@ import './index.scss';
 
 import { Button, Space } from 'antd';
 import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
-
 import store from '@/stores';
 import { useEffect, useState } from 'react';
-
 import { observer } from 'mobx-react';
 import { reaction } from 'mobx';
 

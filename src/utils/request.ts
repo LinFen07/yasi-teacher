@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 const request = axios.create({
-  baseURL: '',
+  baseURL: 'http://120.24.144.113:8668',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
     'request-ajax': true,
   },
-  withCredentials: true,
 });
 
 // export const post = (url: string, params: any) => {

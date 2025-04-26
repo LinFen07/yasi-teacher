@@ -1,6 +1,5 @@
 
 import { Layout } from 'antd';
-
 import './index.scss';
 import HeadTip from '@/components/container/HeadTip';
 import PageContent from '@/components/container/examContent';

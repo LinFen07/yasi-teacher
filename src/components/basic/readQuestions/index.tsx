@@ -7,23 +7,23 @@ import { createInput } from '@/utils/createInput';
 import Questions from '@/components/basic/questions'
 
 const questions = () => {
-  //获取试卷
+  const examTitle = stores.ExamStore.currentExamTitle;
   const exam = stores.ExamStore.getReadExam();
   const [readArr, setReadArr] = useState(exam[0]);
 
   useEffect(() => {
-    const index = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
+    const index = +examTitle.slice(4, examTitle.length - 1) - 1;
     setReadArr(exam[index]);
     createInput(exam, 'read');
-  },[stores.ExamStore.currentExamTitle]);
+  },[examTitle]);
 
   return (
     <div className='readContent'>
-        <div className='leftContent parsed-name' >{ReactHtmlParser(readArr.name)}</div>
-        <div className='rightContent'>
+      <div className='leftContent parsed-name' >{ReactHtmlParser(readArr.name)}</div>
+      <div className='rightContent'>
         <Questions exam={exam}/>
-        </div>
       </div>
+    </div>
   )
 }
 

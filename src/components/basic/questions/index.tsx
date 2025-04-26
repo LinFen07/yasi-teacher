@@ -8,7 +8,9 @@ import  { computedBlanksPrevCount, computedPrevCount }  from '@/utils/computedPr
 import { submitStudentSelectAnswer } from '@/utils/submitAnswer'
 import  TickQuestion  from '../tickQuestion/index'
 import DragQuestion from '../dragQuestion';
+import SelectQuestion from '../selectQuestion';
 import { Exam } from '@/typings/exam';
+
 function questions({exam}: {exam: Exam[]}) {
   const [listensArr, setListensArr] = useState(exam[0]);
   const [questionsArr, setQuestionArr] = useState(listensArr.questionItems);
@@ -65,16 +67,13 @@ function questions({exam}: {exam: Exam[]}) {
   useEffect(() => {
     let prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
     let BlanksprevCount = computedBlanksPrevCount(prevCount, stores.ExamStore.currentExamTitle, exam);
-    if (titleRefs.current[questionIndex - prevCount - 1]) {
-      titleRefs.current[questionIndex - prevCount - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+
+    titleRefs.current[questionIndex - prevCount - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
     const inputAll = document.querySelectorAll('.textInput');
-    
-    if(inputAll[questionIndex - BlanksprevCount - 1]){
-      //@ts-ignore
-      inputAll[questionIndex - BlanksprevCount - 1].focus();
-      inputAll[questionIndex - BlanksprevCount - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    //@ts-ignore
+    inputAll[questionIndex - BlanksprevCount - 1]?.focus();
+    inputAll[questionIndex - BlanksprevCount - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [questionIndex]);
 
   return (

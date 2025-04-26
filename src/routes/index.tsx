@@ -13,6 +13,7 @@ import ReadExam from "@/pages/readExam";
 import WritteExam from "@/pages/writte";
 import TestOver from "@/pages/testOver";
 import stores from "@/stores";
+import Video from "@/pages/video";
 
 // 快速导入工具函数
 const lazyLoad = (moduleName: string) => {
@@ -89,6 +90,10 @@ const routes: Array<Router> = [
     path: '/testOver',
     element: <TestOver/>
   },
+  {
+    path: '/video',
+    element: <Video/>
+  }
 ]
 
 

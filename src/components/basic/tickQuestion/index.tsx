@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import TurndownService from 'turndown';
 import { Table } from 'antd';
 import { ExamType } from '@/typings/exam';
@@ -21,7 +21,7 @@ interface RecordType {
   I?: string;
 }
 
-export default function tickQuestion(questionArr: ExamType) {
+const tickQuestion = (questionArr: ExamType) => {
   const PrevCount = computedTickPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam)
   const parseMarkdownToTableData = (markdown: string) => {
     const rows = markdown.trim().split('\n');
@@ -216,3 +216,5 @@ export default function tickQuestion(questionArr: ExamType) {
     </div>
   );
 }
+
+export default React.memo(tickQuestion);

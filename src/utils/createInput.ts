@@ -7,27 +7,29 @@ import { submitStudentBlankAnswer } from './submitAnswer';
 export function createInput(exam: Array<Exam>, type: string) {
   let prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
   const index = +stores.ExamStore.currentExamTitle.slice(4, stores.ExamStore.currentExamTitle.length - 1) - 1;
-  let currIndex = 0;
-  let timerId = setTimeout(() => {
+
+  setTimeout(() => {
     const span = document.querySelectorAll('.gapfilling-span');
-    if (span.length === 0) return;
-    for(let j = 0; j < exam[index].questionItems.length; j++){
-      const questionArr = exam[index].questionItems[j];
-      if(questionArr.topicType == '4' || questionArr.topicType == '6' ){
-        MyInput(currIndex, span, prevCount, questionArr, type);
-        currIndex += questionArr.items.length;
-      }else if(questionArr.questionType == '2' || questionArr.topicType == '5'){
-        prevCount += questionArr.correctArray.length;
-      }else {
-        prevCount += 1;
+    if (span.length > 0) {
+      let currIndex = 0;
+      for (let j = 0; j < exam[index].questionItems.length; j++) {
+        const questionArr = exam[index].questionItems[j];
+        if (questionArr.topicType == '4' || questionArr.topicType == '6') {
+          MyInput(currIndex, span, prevCount, questionArr, type);
+          currIndex += questionArr.items.length;
+        } else if (questionArr.topicType == '2' || questionArr.topicType == '5') {
+          prevCount += questionArr.correctArray.length;
+        } else {
+          prevCount += 1;
+        }
       }
-    } 
-  }, 0)
-    return () => clearTimeout(timerId);
+    }
+  },0)
 }
 
 export function MyInput(index: number, span: any, prevCount: number, questionArr: ExamType, type: string) {
   let len = index + questionArr.items.length;
+  console.log('createInput', index, len, span);
   for (let i = index; i < len; i++) {
     const wrapper = document.createElement('div');
     wrapper.className = 'input-wrapper';

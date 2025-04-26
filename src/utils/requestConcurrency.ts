@@ -1,5 +1,6 @@
 import { submitAnswer } from '@/api/studentAnswer';
-import { StudentAnswer } from '@/typings/exam'
+import { StudentAnswer } from '@/typings/exam';
+
 
 export function requestConcurrency(data: StudentAnswer[]) {
   return new Promise((resolve, reject) => {
