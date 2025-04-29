@@ -53,7 +53,7 @@ const GeekLayout = () => {
     };
     const fetchPage = async () => {
         const res = await axios.get('http://120.24.144.113:8668/api/teacher/examassignment/page')
-        console.log(res.data.response.items)
+        // console.log(res.data.response.items)
     }
     fetchPage()
 
