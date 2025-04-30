@@ -15,7 +15,6 @@ const { Countdown } = Statistic;
 const Evaluation = () => {
   const [form] = Form.useForm();
   const { currentTask, appraise, id, tasks, article } = useSelector(state => state.tasks);
-
   // 添加所有缺失的状态声明
   const [papers, setPapers] = useState([]);
   const [currentPaper, setCurrentPaper] = useState(null);
@@ -73,12 +72,18 @@ const Evaluation = () => {
           // console.error(`处理第${i}项时出错:`, error);
         }
       }
+      setPapers(newPapers);
     };
 
     if (tasks?.response?.items) {
       processItemsSequentially();
     }
   }, [dispatch, tasks]);
+
+  //   if (tasks?.response?.items) {
+  //     processItemsSequentially();
+  //   }
+  // }, [dispatch,tasks ]);
 
   const [isEditingMode, setIsEditingMode] = useState(false);
   const handleGradeSubmit = async (values) => {
@@ -379,6 +384,6 @@ const Evaluation = () => {
       </div>
     </Spin>
   );
-};
+}
 
 export default Evaluation;

@@ -106,8 +106,8 @@ const ScoringPanel = ({
                                     value={score}
                                     readOnly
                                     disabled
-                                    style={{ 
-                                        width: '100%', 
+                                    style={{
+                                        width: '100%',
                                         marginTop: 4,
                                         backgroundColor: '#f5f5f5',
                                         cursor: 'not-allowed',

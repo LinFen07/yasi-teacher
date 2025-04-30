@@ -116,7 +116,6 @@ const getAppraise = () => {
     }
   };
 };
-
 const getConfrim = ({ paperId, questionId, studentId }) => {
   return async (dispatch) => {
     try {

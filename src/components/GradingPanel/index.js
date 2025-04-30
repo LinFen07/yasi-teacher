@@ -14,10 +14,10 @@ const convertToText = (html) => {
 };
 
 const GradingPanel = ({
-  paperData,
+  paperData = {},
   onSubmit,
   onCancel,
-  editorContent,
+  editorContent = '',
   setEditorContent,
   setFlag,
   isEditingMode = false

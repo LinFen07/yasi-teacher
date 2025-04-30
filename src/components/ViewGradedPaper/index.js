@@ -129,7 +129,6 @@ const ViewGradedPaper = ({ paperData = {}, onBack, onEdit, appraiseData }) => {
           />
         </Card>
       )}
-
       <Card
         title={isScoringMode ? "评分详情" : "评价详情"}
         extra={
