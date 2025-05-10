@@ -4,12 +4,10 @@ import 'react-quill/dist/quill.snow.css';
 import { Table, Button, Tag, Card, Spin, Select, Statistic, Breadcrumb, Form } from "antd";
 import ScoringPanel from "../../components/ScoringPanel";
 import EvaluationPanel from "../../components/EvaluationPanel";
-import ViewGradedPaper from "../../components/ViewGradedPaper";
 import { fetchCompositionInfo, fetchArticle, updatePaperStatus, getAppraise, getPaperName } from '../../store/tasks';
 import { putAppraise } from "../../utils/appraise";
 import { postScore } from "../../utils/score";
 import TaskTable from "../../components/Table/index.js";
-import axios from "axios";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 const { Countdown } = Statistic;
@@ -305,10 +303,10 @@ const Evaluation = () => {
                       {
                         title: (
                           <>
-                            {selectedPaper?.label || '请选择试卷'}
+                            {paperName?.name || '请选择试卷'}
                             <span style={{ marginLeft: 8, color: '#1890ff' }}>
-                              (已阅: {papers.filter(p => p.status === '已阅' && p.paperName === selectedPaper?.value).length}
-                              /总数: {papers.filter(p => p.paperName === selectedPaper?.value).length})
+                              (已阅: {papers.filter(p => p.status === '已阅').length}
+                              /总数: {papers.length})
                             </span>
                           </>
                         )
