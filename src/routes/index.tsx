@@ -56,14 +56,6 @@ const routes: Array<Router> = [
         path: 'dashboard',
         element: <Dashboard/>
       },
-      // {
-      //   path:'record',
-      //   element: <Record />
-      // },
-      // {
-      //   path: 'errorQuestions',
-      //   element: <ErrorQuestions />
-      // },
       {
         path: 'message',
         element: <Message />

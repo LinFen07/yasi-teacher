@@ -2,9 +2,6 @@ import {  makeAutoObservable, reaction} from "mobx";
 import { Exam, ExamType, correct} from '@/typings/exam'
 
 class ExamStore {
-  // constructor() {
-  //   makeAutoObservable(this);
-  // }
   //当前试卷ID
   paperId = 0;
 
@@ -36,10 +33,8 @@ class ExamStore {
   //考生答案
   studentListenAnswers: Array<string> = Array(50).fill('');
   studentReadAnswers: Array<string> = Array(50).fill('');
-
   //阅读答案
   correctRead: Array<correct> = [];
-
   //写作答案
   correctWritte: Array<string> = Array(2).fill('');
 

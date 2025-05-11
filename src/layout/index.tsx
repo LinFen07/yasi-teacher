@@ -21,33 +21,11 @@ const navItems: MenuItem[] = [
   {
     label: '试卷中心',
     key: '/layout/dashboard',
-  },
-  // {
-  //   label: '考试记录',
-  //   key: '/layout/record',
-  // },
-  // {
-  //   label: '错题本',
-  //   key: '/layout/errorQuestions'
-  // }
+  }
 ];
 
 
 const items: MenuItem[] = [
-  // {
-  //   label:'个人中心',
-  //   key: 'user',
-  //   onClick: () => {
-  //     window.location.href = '/layout/userInfo';
-  //   }
-  // },
-  // {
-  //   label:'消息中心',
-  //   key: 'message',
-  //   onClick: () => {
-  //     window.location.href = '/layout/message';
-  //   }
-  // },
   {
     label: '退出登录',
     key: 'logout',
@@ -97,7 +75,7 @@ const Index: React.FC = observer(() => {
       </Content>
       <Footer style={{ textAlign: 'center' }}>
         <div className="foot-copyright">
-          <span>Copyright ©2019-2024 XXX科技有限公司 版权所有</span>
+          <span>仲恺农业工程学院 北京燕兴国际教育咨询有限公司 版权所有</span>
         </div>
       </Footer>
     </Layout>

@@ -1,9 +1,39 @@
-import {  makeAutoObservable} from "mobx";
+import {  makeAutoObservable, reaction} from "mobx";
 import { StudentAnswer } from '@/typings/exam'
 
 class AnswerStore {
   constructor() {
     makeAutoObservable(this);
+    this.loadFromLocalStorage();
+    
+    // 自动保存到 localStorage
+    reaction(
+      () => JSON.stringify(this),
+      () => {
+        this.saveToLocalStorage();
+      }
+    );
+  }
+
+  saveToLocalStorage() {
+    const data = {
+      tickAnswers: this.tickAnswers,
+      dragAnswers: this.dragAnswers,
+      completedAnswers: this.completedAnswers,
+      writingAnswers: this.writingAnswers,
+    };
+    localStorage.setItem('answerStore', JSON.stringify(data));
+  }
+
+  loadFromLocalStorage() {
+    const data = localStorage.getItem('answerStore');
+    if (data) {
+      const parsedData = JSON.parse(data);
+      this.tickAnswers = parsedData.tickAnswers || [];
+      this.dragAnswers = parsedData.dragAnswers || Array(10).fill('');
+      this.completedAnswers = parsedData.completedAnswers || Array(40).fill('');
+      this.writingAnswers = parsedData.writingAnswers || Array(2).fill('');
+    }
   }
 
   // 打勾题答案数组
