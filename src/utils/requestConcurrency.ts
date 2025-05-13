@@ -1,4 +1,4 @@
-import { submitAnswer } from '@/api/studentAnswer';
+import { submitAnswer, submitAnswerBatch } from '@/api/studentAnswer';
 import { StudentAnswer } from '@/typings/exam';
 
 function cacheFailedRequests(requests: StudentAnswer[]) {
@@ -30,6 +30,14 @@ function retryWithBackoff(fn: Function, retries = 3): Promise<any> {
 }
 
 export function requestConcurrency(data: StudentAnswer[]) {
+
+  // try {
+  //   return submitAnswerBatch(data)
+  // }
+  // catch (error) {
+  //   console.log(error)
+  // }
+
   return new Promise((resolve, reject) => {
     // 初始网络检查
     if (!navigator.onLine) {

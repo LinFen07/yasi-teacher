@@ -70,7 +70,7 @@ const Dashboard = () => {
               <p>考试时间：2025.04.08 9:00 ~ 12:00</p>
               <Button 
                 type="primary" 
-                disabled={isCompletedList.includes(item.id as never)} 
+                // disabled={isCompletedList.includes(item.id as never)} 
                 onClick={() => handleConfirmExam(item.id)}>
                 前往考试
               </Button>

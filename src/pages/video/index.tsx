@@ -4,6 +4,7 @@ import "./index.scss";
 import { select } from "@/api/examPaper";
 import { useEffect, useState } from "react";
 import stores from "@/stores";
+import { AddCorrect } from "@/utils/getCorrect";
 
 export default function Video() {
   const id  = new URLSearchParams(window.location.search).get("id") || 0;
@@ -19,9 +20,10 @@ export default function Video() {
         //@ts-ignore
         if (res.code === 1) {
           //@ts-ignore
-          stores.ExamStore.addExam(res.response.titleItems);
-          //@ts-ignore
-          stores.ExamStore.addListenAudio(res.response.audioFileUrl);
+          const response = res.response;
+          stores.ExamStore.addExam(response.titleItems);
+          AddCorrect(response.titleItems);
+          stores.ExamStore.addListenAudio(response.audioFileUrl);
         }
       } catch (error) {
         console.error("获取考试数据失败:", error);

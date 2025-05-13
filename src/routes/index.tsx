@@ -7,7 +7,7 @@ import Layout from "@/layout";
 import Dashboard from "@/pages/dashboard";
 // import ErrorQuestions from "@/pages/errorQuestions";
 import ListeningExam from "@/pages/listeningExam";
-import Message from "@/pages/message";
+// import Message from "@/pages/message";
 import UserInfo from "@/pages/userInfo";
 import ReadExam from "@/pages/readExam";
 import WritteExam from "@/pages/writte";
@@ -55,10 +55,6 @@ const routes: Array<Router> = [
       {
         path: 'dashboard',
         element: <Dashboard/>
-      },
-      {
-        path: 'message',
-        element: <Message />
       },
       {
         path: 'userInfo',

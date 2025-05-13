@@ -11,6 +11,14 @@ export const submitAnswer = (data: StudentAnswer) => {
   })
 }
 
+export const submitAnswerBatch = (data: StudentAnswer[]) => {
+  return request({
+    url: '/api/student/studentAnswer/addStudentAnswerBatch',
+    method: 'POST',
+    data: data,
+  })
+}
+
 export const getAnswerList = (pageNow: number, pageSize: number, data: any) => {
   return request({
     url: `/api/student/studentAnswer/page?pageNow=${pageNow}&pageSize=${pageSize}`,

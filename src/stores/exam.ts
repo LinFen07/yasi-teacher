@@ -1,5 +1,5 @@
 import {  makeAutoObservable, reaction} from "mobx";
-import { Exam, ExamType, correct} from '@/typings/exam'
+import { Exam, ExamType} from '@/typings/exam'
 
 class ExamStore {
   //当前试卷ID
@@ -11,7 +11,6 @@ class ExamStore {
 
   //字体大小
   FontSize = 18;
-
   //分数标签
   scoreTag = '听力报告';
 
@@ -27,14 +26,10 @@ class ExamStore {
   //已完成题目数组
   correctListenAnswer: Array<number> = [];
 
-  //听力答案
-  correctListen: Array<correct> = [];
-
   //考生答案
   studentListenAnswers: Array<string> = Array(50).fill('');
   studentReadAnswers: Array<string> = Array(50).fill('');
-  //阅读答案
-  correctRead: Array<correct> = [];
+
   //写作答案
   correctWritte: Array<string> = Array(2).fill('');
 
@@ -65,10 +60,8 @@ class ExamStore {
       wirrteExam: this.wirrteExam,
       currentExam: this.currentExam,
       correctListenAnswer: this.correctListenAnswer,
-      correctListen: this.correctListen,
       studentListenAnswers: this.studentListenAnswers,
       studentReadAnswers: this.studentReadAnswers,
-      correctRead: this.correctRead,
       correctWritte: this.correctWritte,
     };
     localStorage.setItem('examStore', JSON.stringify(data));
@@ -90,10 +83,8 @@ class ExamStore {
       this.wirrteExam = parsedData.wirrteExam || [];
       this.currentExam = parsedData.currentExam || [];
       this.correctListenAnswer = parsedData.correctListenAnswer || [];
-      this.correctListen = parsedData.correctListen || [];
       this.studentListenAnswers = parsedData.studentListenAnswers || Array(50).fill('');
       this.studentReadAnswers = parsedData.studentReadAnswers || Array(50).fill('');
-      this.correctRead = parsedData.correctRead || [];
       this.correctWritte = parsedData.correctWritte || Array(2).fill('');
     }
   }

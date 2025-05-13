@@ -58,11 +58,11 @@ function HeadTip(props: propType) {
     if(type === 'listen'){
       navigate('/readnExam',{ replace: true });
       requestConcurrency(stores.AnswerStore.completedAnswers);
-      stores.AnswerStore.clearAnswers();
+      stores.AnswerStore.clearAnswers(type);
     }else if(type === 'read'){
       navigate('/writteExam',{ replace: true });
       requestConcurrency(stores.AnswerStore.completedAnswers);
-      stores.AnswerStore.clearAnswers();
+      stores.AnswerStore.clearAnswers(type);
     }else if(type === 'writte'){
       navigate('/testOver',{ replace: true });
       submitStudentWritteAnswer(stores.ExamStore.wirrteExam[0].questionItems[0], 0, stores.ExamStore.correctWritte[0]);

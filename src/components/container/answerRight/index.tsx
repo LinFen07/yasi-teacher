@@ -1,6 +1,5 @@
 import './index.scss';
 import ScoreLie from '@/components/basic/scoreLie';
-
 import { Space, Table, Tag } from 'antd';
 import type { TableProps } from 'antd';
 import stores from '@/stores';
@@ -71,6 +70,7 @@ const columns: TableProps<DataType>['columns'] = [
 
 function AnswerRight() {
   const [data, setData] = useState<DataType[]>([]);
+  const [totalData, setTotalData] = useState<DataType[]>([]);
   const [currentPage, setCurrentPage] = useState(1); // 当前页码
   const [pageSize, setPageSize] = useState(5); // 每页显示的条数
   const [total, setTotal] = useState(0); // 总题目数
@@ -81,40 +81,38 @@ function AnswerRight() {
   };
 
   async function fetchAnswerList() {
-    const res = await getAnswerList(currentPage, pageSize, AnsewerData);
+    const res = await getAnswerList(1, 75, AnsewerData);
     //@ts-ignore
     setTotal(res.response.counts); // 设置总题目数
     
-    setData(
+    setTotalData(
       //@ts-ignore
-      res.response.items.map((item: any) => ({
+      res.response.items.map((item: any, index: number) => ({
         key: item.id,
         questionId: item.questionId,
         isCorrect: item.isCorrect,
         studentAnswer: item.studentAnswer,
         score: item.score,
+        answer: stores.AnswerStore.correct[index].correct,
       }))
     );
   }
 
+  const changePageData = () => {
+    setData(totalData.slice((currentPage - 1) * pageSize, currentPage * pageSize));
+  }
+
   useEffect(() => {
     fetchAnswerList();
-  }, [currentPage, pageSize, stores.ExamStore.scoreTag]);
+  },[])
 
-  const changeAn = (e: any) => {
-    if (e.target.tagName === 'DIV') return;
-    let btns = document
-      .getElementsByClassName('anrtHead')[0]
-      .getElementsByTagName('button');
-    for (let i = 0; i < btns.length; i++) {
-      btns[i].classList.remove('act');
-    }
-    e.target.classList.add('act');
-  };
+  useEffect(() => {
+    changePageData();
+  }, [currentPage, pageSize, totalData]);
 
   return (
     <div className="anrt">
-      <div className="anrtHead" onClick={changeAn}>
+      <div className="anrtHead">
         <button className="act">我的答案</button>
         {/* <button>答案解析</button> */}
       </div>

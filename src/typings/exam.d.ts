@@ -48,6 +48,11 @@ export type StudentAnswer = {
   questionType: string,
 }
 
+export type Correct = {
+  questonId: number;
+  correct: string;
+}
+
 export type textArr = {
   text: string;
   isHightlight: boolean;
