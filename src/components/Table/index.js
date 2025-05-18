@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Tag, Button, Input } from "antd";
+import { Table, Tag, Button, Input, Form } from "antd";
 import "../../components/Table/index.scss"
 const TaskTable = ({
     papers,
@@ -17,28 +17,57 @@ const TaskTable = ({
     setIsEditingMode
 }) => {
     const [searchText, setSearchText] = useState('');
+    const [searchName, setSearchName] = useState('');
+    const [activeSearchText, setActiveSearchText] = useState('');
+    const [activeSearchName, setActiveSearchName] = useState('');
 
     const handleSearchChange = (e) => {
         setSearchText(e.target.value);
     };
 
+    const handleSearch = () => {
+        setActiveSearchText(searchText);
+        setActiveSearchName(searchName);
+    };
+
     return (
         <>
-            <div style={{ display: 'flex', gap: '16px' }}>
-                <Input
-                    style={{ width: 200 }}
-                    placeholder="输入试卷名称筛选"
-                    value={searchText}
-                    onChange={handleSearchChange}
-                />
-                {/* <Button
-                    type="primary"
-                    onClick={handleStartGrading}
-                    disabled={!selectedPaper || filterPendingPapers().length === 0}
-                >
-                    开始批阅
-                </Button> */}
-            </div>
+            <Form>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <Input
+                        style={{ width: 200 }}
+                        placeholder="输入试卷名称筛选"
+                        value={searchText}
+                        onChange={handleSearchChange}
+                    />
+                    <Input
+                        style={{ width: 200 }}
+                        placeholder="请输入考生姓名"
+                        value={searchName}
+                        onChange={e => setSearchName(e.target.value)}
+                    />
+                    <Button
+                        type="primary"
+                        onClick={handleSearch}
+                        disabled={papers.length === 0}
+                    >
+                        筛选
+                    </Button>
+                    <span style={{ marginLeft: 16, color: '#1890ff' }}>
+                        已阅: {papers
+                            .filter(p => 
+                                (activeSearchText === '' || p.paperName.includes(activeSearchText)) &&
+                                (activeSearchName === '' || p.studentName.includes(activeSearchName)) &&
+                                p.status === '已阅'
+                            ).length}
+                        /总数: {papers
+                            .filter(p => 
+                                (activeSearchText === '' || p.paperName.includes(activeSearchText)) &&
+                                (activeSearchName === '' || p.studentName.includes(activeSearchName))
+                            ).length}
+                    </span>
+                </div>
+            </Form>
             <Table
                 columns={[
                     {
@@ -90,7 +119,11 @@ const TaskTable = ({
                     onChange: handleChange,
                 }}
                 dataSource={papers
-                    .filter(p => searchText === '' || p.paperName.includes(searchText))
+                    .filter(p => 
+                        (activeSearchText === '' || p.paperName.includes(activeSearchText)) &&
+                        (activeSearchName === '' || p.studentName.includes(activeSearchName))
+                    )
+                    .map(item => ({...item, key: `${item.examPaperId}-${item.studentId}`}))
                     .sort((a, b) => {
                         if (a.status === '待阅' && b.status !== '待阅') return -1;
                         if (a.status !== '待阅' && b.status === '待阅') return 1;

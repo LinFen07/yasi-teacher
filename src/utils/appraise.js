@@ -1,9 +1,10 @@
 import axios from "axios";
 import { getNewAppraise } from "../store/tasks";
+import { request } from "../utils/request.js"
 const putAppraise = (appraise, id) => {
     return async (dispatch) => {
         try {
-            const response = await axios.post(`http://120.24.144.113:8668/api/teacher/examassignment/addAppraise?appraise=${appraise}&id=${id}`);
+            const response = await request.post(`/api/teacher/examassignment/addAppraise?appraise=${appraise}&id=${id}`);
             console.log(`评价 ${appraise} id ${id}`);
             // dispatch(getNewAppraise(id));
         } catch (error) {

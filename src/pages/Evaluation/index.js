@@ -70,18 +70,27 @@ const Evaluation = () => {
             console.warn(`跳过无效的试卷项: index=${i}`);
             continue;
           }
-          const examPaperId = taskItem.examPaperId;
+          const examPaperId = taskItem?.examPaperId;
           const studentsInfo = await dispatch(getStudentsInfo(examPaperId));
-          console.log(studentsInfo)
           const composition = await dispatch(getComposition(studentsInfo));
-          console.log(composition)
-          const selectId = [composition[0].id, composition[1].id];
-          const paperId = studentsInfo.paperId;
-          const studentName = taskItem.studentName;
-          const selectedPaperName = taskItem.examName;
-          const status = composition[0].score !== 0 && composition[1].score !== 0 &&
-            studentsInfo.appraise !== "undefined" && studentsInfo.appraise !== null
-            ? '已阅' : '未阅';
+
+          // 处理可能为空的composition
+          const selectId = composition?.length >= 2
+            ? [composition[0]?.id, composition[1]?.id].filter(Boolean)
+            : [];
+
+          const paperId = studentsInfo?.paperId;
+          const studentName = taskItem?.studentName;
+          const selectedPaperName = taskItem?.examName;
+
+          // 安全计算status
+          const status = composition?.length >= 2
+            ? (composition[0]?.score !== 0 &&
+              composition[1]?.score !== 0 &&
+              studentsInfo?.appraise !== "undefined" &&
+              studentsInfo?.appraise != null
+              ? '已阅' : '未阅')
+            : '未阅';
 
           newPapers.push({
             studentsInfo: studentsInfo,
@@ -200,43 +209,43 @@ const Evaluation = () => {
   };
 
   // 开始批阅
-  const handleStartGrading = () => {
-    setEssayLoading(true);
-    try {
-      const pendingPapers = filterPendingPapers();
-      if (!pendingPapers || pendingPapers.length === 0) {
-        console.log('没有待阅的试卷');
-        return;
-      }
+  // const handleStartGrading = () => {
+  //   setEssayLoading(true);
+  //   try {
+  //     const pendingPapers = filterPendingPapers();
+  //     if (!pendingPapers || pendingPapers.length === 0) {
+  //       console.log('没有待阅的试卷');
+  //       return;
+  //     }
 
-      const firstPendingPaper = pendingPapers[0];
-      if (!firstPendingPaper) {
-        console.error('获取待阅试卷失败');
-        return;
-      }
+  //     const firstPendingPaper = pendingPapers[0];
+  //     if (!firstPendingPaper) {
+  //       console.error('获取待阅试卷失败');
+  //       return;
+  //     }
 
-      setCurrentPaper({
-        ...firstPendingPaper,
-        questions: firstPendingPaper.questions || []
-      });
-      setViewMode('grade');
-    } catch (error) {
-      console.error('开始批阅失败:', error);
-    } finally {
-      setEssayLoading(false);
-    }
-  };
+  //     setCurrentPaper({
+  //       ...firstPendingPaper,
+  //       questions: firstPendingPaper.questions || []
+  //     });
+  //     setViewMode('grade');
+  //   } catch (error) {
+  //     console.error('开始批阅失败:', error);
+  //   } finally {
+  //     setEssayLoading(false);
+  //   }
+  // };
 
   // 编辑试卷
-  const handleEditPaper = (restoredData) => {
-    setIsEditingMode(true);
-    setFlag(true);
-    setCurrentPaper({
-      ...currentPaper,
-      isEditing: true
-    });
-    setViewMode('grade');
-  };
+  // const handleEditPaper = (restoredData) => {
+  //   setIsEditingMode(true);
+  //   setFlag(true);
+  //   setCurrentPaper({
+  //     ...currentPaper,
+  //     isEditing: true
+  //   });
+  //   setViewMode('grade');
+  // };
   return (
     <Spin spinning={gradeLoading || essayLoading}>
       {paperName.length > 0 && (
@@ -251,17 +260,17 @@ const Evaluation = () => {
                       {
                         title: '试卷批阅'
                       },
-                      {
-                        title: (
-                          <>
-                            所有试卷
-                            <span style={{ marginLeft: 8, color: '#1890ff' }}>
-                              (已阅: {papers.filter(p => p.status === '已阅').length}
-                              /总数: {papers.length})
-                            </span>
-                          </>
-                        )
-                      }
+                      // {
+                      //   title: (
+                      //     <>
+                      //       所有试卷
+                      //       <span style={{ marginLeft: 8, color: '#1890ff' }}>
+                      //         (已阅: {papers.filter(p => p.status === '已阅').length}
+                      //         /总数: {papers.length})
+                      //       </span>
+                      //     </>
+                      //   )
+                      // }
                     ]}
                   />
                   {/* <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>

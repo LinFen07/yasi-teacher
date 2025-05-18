@@ -37,14 +37,24 @@ const ScoringPanel = ({
     const score = count === 1 ? score_1 : score_2
     useEffect(() => {
         const fetchTitle = async () => {
-            let titlePromise;
-            if (count === 1) {
-                titlePromise = dispatch(getOriginalTitel(paperData.composition[0].questionId));
-            } else {
-                titlePromise = dispatch(getOriginalTitel(paperData.composition[1].questionId));
+            if (!paperData?.composition || paperData.composition.length < count) {
+                setEssayTitle('');
+                return;
             }
-            const title = await titlePromise;
-            setEssayTitle(title);
+
+            const question = count === 1 ? paperData.composition[0] : paperData.composition[1];
+            if (!question?.questionId) {
+                setEssayTitle('');
+                return;
+            }
+
+            try {
+                const title = await dispatch(getOriginalTitel(question.questionId));
+                setEssayTitle(title);
+            } catch (error) {
+                console.error('获取作文标题失败:', error);
+                setEssayTitle('');
+            }
         };
 
         fetchTitle();

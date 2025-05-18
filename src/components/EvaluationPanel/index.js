@@ -226,6 +226,12 @@ const EvaluationPanel = ({
     }
     // console.log('当前页码:', safePage, '总页数:', totalPages, '当前页数据:', currentAnswers);
     // console.log(111, paperData)
+    console.log('Rendering EvaluationPanel:', {
+        loading,
+        answersCount: answers.length,
+        isEditingMode
+    });
+
     return (
         <Form form={form} onFinish={onSubmit}>
             <div style={{
@@ -236,7 +242,8 @@ const EvaluationPanel = ({
                 width: '100%',
                 maxWidth: '1200px',
                 margin: '0 auto',
-                overflowX: 'hidden'
+                overflowX: 'hidden',
+                border: '1px solid rgb(232, 215, 215)' // 调试用边框
             }}>
                 <div
                     style={{
@@ -246,155 +253,164 @@ const EvaluationPanel = ({
                         height: '520px'
                     }}
                 >
-                    {isEditingMode ? (
-                        <>
-                            {/* 编辑模式下显示完整布局 */}
-                            <div style={{
-                                width: '480px',
-                                height: '500px',
-                                paddingRight: '8px',
-                                overflow: 'hidden',
+                    <div style={{
+                        width: '480px',
+                        height: '500px',
+                        paddingRight: '8px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flexShrink: 0
+                    }}>
+                        <Card
+                            title="答题情况"
+                            style={{
+                                flex: 1,
                                 display: 'flex',
                                 flexDirection: 'column',
-                                flexShrink: 0
-                            }}>
-                                <Card
-                                    title="答题情况"
-                                    style={{
-                                        flex: 1,
+                                overflow: 'hidden',
+                                touchAction: 'pan-y'
+                            }}
+                        >
+                            <Spin spinning={loading} tip="数据加载中..." size="large">
+                                {answers.length > 0 ? (
+                                    isEditingMode ? (
+                                        <>
+                                            <Carousel
+                                                dots={false}
+                                                afterChange={(current) => handlePageChange(current + 1)}
+                                                style={{ flex: 1 }}
+                                                easing="ease-in-out"
+                                                draggable
+                                                swipe
+                                                touchMove
+                                                swipeToSlide
+                                                speed={500}
+                                                waitForAnimate
+                                                infinite={false}
+                                                adaptiveHeight
+                                            >
+                                                {Array.from({ length: totalPages }).map((_, i) => (
+                                                    <div key={i} style={{ padding: '0 8px' }}>
+                                                        <div style={{
+                                                            marginBottom: 16,
+                                                            height: 'calc(100vh - 280px)',
+                                                            overflowY: 'auto',
+                                                            paddingRight: '8px',
+                                                            margin: '0 -8px'
+                                                        }}>
+                                                            {currentAnswers.map((item, index) => (
+                                                                <Card
+                                                                    key={index}
+                                                                    style={{ marginBottom: 8 }}
+                                                                    title={`题号: ${item.id || '无'}`}
+                                                                    extra={
+                                                                        <Button
+                                                                            type="link"
+                                                                            onClick={() => {
+                                                                                setCurrentDetail(item);
+                                                                                setDetailVisible(true);
+                                                                            }}
+                                                                        >
+                                                                            详情
+                                                                        </Button>
+                                                                    }
+                                                                >
+                                                                    <p><strong>学生答案：</strong> {item.studentAnswer || '无'}</p>
+                                                                    <p><strong>正确答案：</strong> {item.correctAnswer || '无'}</p>
+                                                                    <p>
+                                                                        <strong>状态：</strong>
+                                                                        {item.isCorrect === 2 ? (
+                                                                            <Tag color="blue">作文</Tag>
+                                                                        ) : item.isCorrect === undefined ? (
+                                                                            <Tag color="gray">未评阅</Tag>
+                                                                        ) : (
+                                                                            <Tag color={item.isCorrect === 1 ? 'green' : 'red'}>
+                                                                                {item.isCorrect === 1 ? '正确' : '错误'}
+                                                                            </Tag>
+                                                                        )}
+                                                                    </p>
+                                                                    <p><strong>得分：</strong> {item.score || '0'}</p>
+                                                                </Card>
+                                                            ))}
+                                                        </div>
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center',
+                                                            marginTop: 16
+                                                        }}>
+                                                            <Button
+                                                                disabled={currentPage <= 1}
+                                                                onClick={() => setCurrentPage(currentPage - 1)}
+                                                            >
+                                                                上一页
+                                                            </Button>
+                                                            <span>第 {currentPage} 页 / 共 {totalPages} 页</span>
+                                                            <Button
+                                                                disabled={currentPage >= totalPages}
+                                                                onClick={() => setCurrentPage(currentPage + 1)}
+                                                            >
+                                                                下一页
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </Carousel>
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginTop: 16,
+                                                padding: '12px 0',
+                                                borderTop: '1px solid #f0f0f0',
+                                                position: 'sticky',
+                                                bottom: 0,
+                                                background: '#fff',
+                                                zIndex: 1
+                                            }}>
+                                                <Button
+                                                    disabled={currentPage <= 1}
+                                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                                >
+                                                    上一页
+                                                </Button>
+                                                <span>第 {currentPage} 页 / 共 {totalPages} 页</span>
+                                                <Button
+                                                    disabled={currentPage >= totalPages}
+                                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                                >
+                                                    下一页
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : null
+                                ) : (
+                                    <div style={{
+                                        height: '100%',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        overflow: 'hidden',
-                                        touchAction: 'pan-y'
-                                    }}
-                                >
-                                    <Spin spinning={loading} tip="数据加载中..." size="large">
-                                        {answers.length > 0 ? (
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: '#666',
+                                        backgroundColor: '#f5f5f5',
+                                        border: '1px solid #f0f0f0'
+                                    }}>
+                                        {loading ? <Spin /> : (
                                             <>
-                                                <Carousel
-                                                    dots={false}
-                                                    afterChange={(current) => handlePageChange(current + 1)}
-                                                    style={{ flex: 1 }}
-                                                    easing="ease-in-out"
-                                                    draggable
-                                                    swipe
-                                                    touchMove
-                                                    swipeToSlide
-                                                    speed={500}
-                                                    waitForAnimate
-                                                    infinite={false}
-                                                    adaptiveHeight
-                                                >
-                                                    {Array.from({ length: totalPages }).map((_, i) => (
-                                                        <div key={i} style={{ padding: '0 8px' }}>
-                                                            <div style={{
-                                                                marginBottom: 16,
-                                                                height: 'calc(100vh - 280px)',
-                                                                overflowY: 'auto',
-                                                                paddingRight: '8px',
-                                                                margin: '0 -8px'
-                                                            }}>
-                                                                {currentAnswers.map((item, index) => (
-                                                                    <Card
-                                                                        key={index}
-                                                                        style={{ marginBottom: 8 }}
-                                                                        title={`题号: ${item.id}`}
-                                                                        extra={
-                                                                            <Button
-                                                                                type="link"
-                                                                                onClick={() => {
-                                                                                    setCurrentDetail(item);
-                                                                                    setDetailVisible(true);
-                                                                                }}
-                                                                            >
-                                                                                详情
-                                                                            </Button>
-                                                                        }
-                                                                    >
-                                                                        <p><strong>学生答案：</strong> {item.studentAnswer}</p>
-                                                                        <p><strong>正确答案：</strong> {item.correctAnswer}</p>
-                                                                        <p>
-                                                                            <strong>状态：</strong>
-                                                                            {item.isCorrect === 2 ? (
-                                                                                <Tag color="blue">作文</Tag>
-                                                                            ) : (
-                                                                                <Tag color={item.isCorrect === 1 ? 'green' : 'red'}>
-                                                                                    {item.isCorrect === 1 ? '正确' : '错误'}
-                                                                                </Tag>
-                                                                            )}
-                                                                        </p>
-                                                                        <p><strong>得分：</strong> {item.score}</p>
-                                                                    </Card>
-                                                                ))}
-                                                            </div>
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                justifyContent: 'space-between',
-                                                                alignItems: 'center',
-                                                                marginTop: 16
-                                                            }}>
-                                                                <Button
-                                                                    disabled={currentPage <= 1}
-                                                                    onClick={() => setCurrentPage(currentPage - 1)}
-                                                                >
-                                                                    上一页
-                                                                </Button>
-                                                                <span>第 {currentPage} 页 / 共 {totalPages} 页</span>
-                                                                <Button
-                                                                    disabled={currentPage >= totalPages}
-                                                                    onClick={() => setCurrentPage(currentPage + 1)}
-                                                                >
-                                                                    下一页
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </Carousel>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    marginTop: 16,
-                                                    padding: '12px 0',
-                                                    borderTop: '1px solid #f0f0f0',
-                                                    position: 'sticky',
-                                                    bottom: 0,
-                                                    background: '#fff',
-                                                    zIndex: 1
-                                                }}>
-                                                    <Button
-                                                        disabled={currentPage <= 1}
-                                                        onClick={() => setCurrentPage(currentPage - 1)}
-                                                    >
-                                                        上一页
-                                                    </Button>
-                                                    <span>第 {currentPage} 页 / 共 {totalPages} 页</span>
-                                                    <Button
-                                                        disabled={currentPage >= totalPages}
-                                                        onClick={() => setCurrentPage(currentPage + 1)}
-                                                    >
-                                                        下一页
-                                                    </Button>
-                                                </div>
+                                                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" style={{ marginBottom: 16 }}>
+                                                    <path d="M32 56C45.2548 56 56 45.2548 56 32C56 18.7452 45.2548 8 32 8C18.7452 8 8 18.7452 8 32C8 45.2548 18.7452 56 32 56Z" stroke="#666" strokeWidth="2" />
+                                                    <path d="M32 24V32M32 40H32.02" stroke="#666" strokeWidth="2" strokeLinecap="round" />
+                                                </svg>
+                                                <div>暂无答题数据</div>
                                             </>
-                                        ) : (
-                                            <div style={{
-                                                height: '100%',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: '#999'
-                                            }}>
-                                                {loading ? null : '暂无答题数据'}
-                                            </div>
                                         )}
-                                    </Spin>
-                                </Card>
-                            </div>
-
-
-                        </>
-                    ) : null}
+                                    </div>
+                                )}
+                                {console.log('Empty state rendered:', !loading && answers.length === 0)}
+                            </Spin>
+                        </Card>
+                    </div>
 
                     {/* 右侧：评价编辑器 */}
                     <div style={{

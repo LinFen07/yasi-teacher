@@ -2,6 +2,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import axios from 'axios';
 import { set } from "lodash";
+import { request } from "../utils";
 
 const tasksStore = createSlice({
   name: "tasks",
@@ -78,7 +79,7 @@ const { setTasks, setCurrentTask, updateTask, setPaper, setArticle, setAppraise,
 const fetchArticle = (userId, id) => {  // 接收参数 
   return async (dispatch) => {
     try {
-      const response = await axios.get('http://120.24.144.113:8668/api/teacher/exam/paper/allIdAndJudge?pageSize=50', {
+      const response = await request.get('/api/teacher/exam/paper/allIdAndJudge?pageSize=50', {
         params: {  // 注意：GET 请求参数需要通过 `params` 传递 
           userId: userId  // 使用传入的参数 
         }
@@ -99,7 +100,7 @@ const fetchArticle = (userId, id) => {  // 接收参数
 const fetchCompositionInfo = (id) => {
   return async (dispatch) => {
     try {
-      const response = await axios.post(`http://120.24.144.113:8668/api/teacher/question/select/${id}`);
+      const response = await request.post(`/api/teacher/question/select/${id}`);
       const compositionInfo = response.data;
       // 确保处理后的数据是数组格式
       const processedData = Array.isArray(compositionInfo) ? compositionInfo : [compositionInfo];
@@ -113,7 +114,7 @@ const fetchCompositionInfo = (id) => {
 const getAppraise = () => {
   return async (dispatch) => {
     try {
-      const res = await axios.get(`http://120.24.144.113:8668/api/teacher/examassignment/page?pageSize=50`);
+      const res = await request.get(`/api/teacher/examassignment/page?pageSize=50`);
       // console.log(res.data);
       const appraise = res.data
       dispatch(setAppraise(appraise))
@@ -125,7 +126,7 @@ const getAppraise = () => {
 const getConfrim = ({ paperId, questionId, studentId }) => {
   return async (dispatch) => {
     try {
-      const res = await axios.post(`http://120.24.144.113:8668/api/teacher/studentAnswer/isExist`, {
+      const res = await request.post(`/api/teacher/studentAnswer/isExist`, {
         paperId,
         questionId,
         studentId
@@ -141,7 +142,7 @@ const getConfrim = ({ paperId, questionId, studentId }) => {
 const getNewAppraise = (id) => {
   return async (dispatch) => {
     try {
-      const res = await axios.get(`http://120.24.144.113:8668/api/teacher/examassignment/${id}`);
+      const res = await request.get(`/api/teacher/examassignment/${id}`);
       console.log(res.data);
       const appraise = res.data
       dispatch(addAppraise({ id, appraise }));
@@ -154,9 +155,9 @@ const getNewAppraise = (id) => {
 const getTask = (userId) => {
   return async (dispatch) => {
     try {
-      const res = await axios.post(`http://120.24.144.113:8668/api/teacher/teacherAssignment/pageList?userId=${userId}`)
+      const res = await request.post(`/api/teacher/teacherAssignment/pageList?userId=${userId}`)
       const count = res.data.response.counts;
-      const res_2 = await axios.post(`http://120.24.144.113:8668/api/teacher/teacherAssignment/pageList?userId=${userId}&pageSize=${count}`)
+      const res_2 = await request.post(`/api/teacher/teacherAssignment/pageList?userId=${userId}&pageSize=${count}`)
       const task = res_2.data
       dispatch(setTasks(task))
     } catch (error) {
@@ -168,7 +169,7 @@ const getTask = (userId) => {
 const getStudentsInfo = (examPaperId) => {
   return async (dispatch) => {
     try {
-      const res = await axios.get(`http://120.24.144.113:8668/api/teacher/examassignment/${examPaperId}`)
+      const res = await request.get(`/api/teacher/examassignment/${examPaperId}`)
       const studentId = res.data.response.userId
       const paperId = res.data.response.examPaperId
       const appraise = res.data.response.appraise
@@ -194,13 +195,13 @@ const getStudentsAnswers = (studentsInfo) => {
         "paperId": paperId
       };
 
-      const res = await axios.post(
-        `http://120.24.144.113:8668/api/teacher/studentAnswer/page`,
+      const res = await request.post(
+        `/api/teacher/studentAnswer/page`,
         requestData
       );
       const count = res.data.response.counts
-      const res_2 = await axios.post(
-        `http://120.24.144.113:8668/api/teacher/studentAnswer/page?pageSize=${count}`,
+      const res_2 = await request.post(
+        `/api/teacher/studentAnswer/page?pageSize=${count}`,
         requestData
       );
       const studentAnswer = res_2.data.response.items
@@ -221,12 +222,11 @@ const getComposition = (studentsInfo) => {
         "questionType": 7
       };
 
-      const res = await axios.post(
-        `http://120.24.144.113:8668/api/teacher/studentAnswer/page`,
+      const res = await request.post(
+        `/api/teacher/studentAnswer/page`,
         requestData
       );
       const composition = res.data.response.items
-      console.log('返回的数据', composition)
       return composition
     } catch (error) {
     }
@@ -235,7 +235,7 @@ const getComposition = (studentsInfo) => {
 const selectById = (id) => {
   return async (dispatch) => {
     try {
-      const res = await axios.post(`http://120.24.144.113:8668/api/teacher/studentAnswer/selectById/${id}`);
+      const res = await request.post(`/api/teacher/studentAnswer/selectById/${id}`);
       console.log(res.data);
       if (res.data) {
         dispatch(setConfrim(res.data));
@@ -253,7 +253,7 @@ const selectNameById = (studentsInfo) => {
   return async (dispatch) => {
     try {
       const { studentId } = studentsInfo
-      const res = await axios.post(`http://120.24.144.113:8668/api/teacher/user/select/${studentId}`);
+      const res = await request.post(`/api/teacher/user/select/${studentId}`);
       const studentName = res.data.response.realName
       return studentName
     } catch (error) {
@@ -262,11 +262,12 @@ const selectNameById = (studentsInfo) => {
     }
   };
 }
+
 //获取原题
 const getOriginalTitel = (questionId) => {
   return async (dispatch) => {
     try {
-      const res = await axios.post(`http://120.24.144.113:8668/api/teacher/question/select/${questionId}`)
+      const res = await request.post(`/api/teacher/question/select/${questionId}`)
       const title = res.data.response
       return title
     } catch (error) {
@@ -279,8 +280,8 @@ const getOriginalTitel = (questionId) => {
 const getPaperName = () => {
   return async (dispatch) => {
     try {
-      const response = await axios.post(
-        'http://120.24.144.113:8668/api/teacher/exam/paper/pageList',
+      const response = await request.post(
+        '/api/teacher/exam/paper/pageList',
         {
           pageIndex: 0,
           pageSize: 1,
@@ -289,8 +290,8 @@ const getPaperName = () => {
       );
       const count = response.data.response.total
       console.log(count)
-      const response_2 = await axios.post(
-        'http://120.24.144.113:8668/api/teacher/exam/paper/pageList',
+      const response_2 = await request.post(
+        '/api/teacher/exam/paper/pageList',
         {
           pageIndex: 0,
           pageSize: count,

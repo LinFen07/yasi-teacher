@@ -10,7 +10,7 @@ const userStore = createSlice({
     //数据状态
     initialState: {
         token: getToken() || '',
-        userInfo: {},
+        userInfo: JSON.parse(localStorage.getItem('user_message')) || {},
         theme: 'light' // 默认亮色主题
     },
     //同步修改方法
