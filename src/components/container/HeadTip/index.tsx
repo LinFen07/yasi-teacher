@@ -55,11 +55,11 @@ const HeadTip = forwardRef((props: propType) => {
 
   const finish = (type: string) => {
     if(type === 'listen'){
-      navigate('/readnExam',{ replace: true });
+      navigate(`/video?id=${stores.ExamStore.paperId}&type=${type}`, { replace: true });
       requestConcurrency(stores.AnswerStore.completedAnswers);
       stores.AnswerStore.clearAnswers(type);
     }else if(type === 'read'){
-      navigate('/writteExam',{ replace: true });
+      navigate(`/video?id=${stores.ExamStore.paperId}&type=${type}`, { replace: true });
       requestConcurrency(stores.AnswerStore.completedAnswers);
       stores.AnswerStore.clearAnswers(type);
     }else if(type === 'writte'){

@@ -1,0 +1,47 @@
+.examExpainVedioContainer {
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 24px 24px;
+  margin-top: 16;
+}
+
+.videoIcon {
+  font-size: 24px;
+  vertical-align: 'middle';
+  margin-right: 16px;
+  cursor: pointer;
+}
+
+.video-information-text {
+  color: #555;
+  font-size: 18px;
+}
+
+.video-iscomplete-text {
+  color: #d81b3a;
+  font-size: 18px;
+  margin-top: 16px;
+}
+
+.exam-expain-video {
+  width:100%;
+  height: 50%;
+}
+
+.video-confirm-container {
+  margin-top: 24px;
+}
+
+.video-ready{
+  font-weight: 800;
+  font-size: 24px;
+}
+
+.video-confirm-button {
+  padding: 12px;
+  background-color: black;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}

@@ -1,4 +1,36 @@
-.video-img{
-  width: 80%;
-  margin-top: 40px;
+.exam-expain-contatiner {
+  font-family: 'Arial, sans-serif';
+  background: #fff; 
+  min-height: 100vh;
+  text-align: left;
+}
+
+.exam-video-explain-note-container {
+  position: fixed;
+  right: 60px;
+  bottom: 60px;
+  width: 180px;
+  background: #ffe44c;
+  border: 2px solid #e0c200;
+  border-radius: 6px;
+  padding: 16px;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.exam-compelete {
+  color: #d81b3a;
+  font-weight: 600;
+  font-size: 20px;
+  margin: 8px 0;
+}
+
+.note-close-button {
+  position: absolute;
+  right: 8px;
+  top: 4px; 
+  cursor: pointer;
+  color: #888;
+  font-weight: 700; 
+  font-size: 18px;
 }
