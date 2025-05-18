@@ -226,6 +226,7 @@ const getComposition = (studentsInfo) => {
         requestData
       );
       const composition = res.data.response.items
+      console.log('返回的数据', composition)
       return composition
     } catch (error) {
     }

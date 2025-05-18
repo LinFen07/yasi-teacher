@@ -20,103 +20,61 @@ const Evaluation = () => {
   const [viewMode, setViewMode] = useState('list');
   const [gradeLoading, setGradeLoading] = useState(false);
   const [essayLoading, setEssayLoading] = useState(false);
-  const [selectedPaper, setSelectedPaper] = useState(null);
   const [refreshFlag, setRefreshFlag] = useState(false);
   const [editorContent, setEditorContent] = useState('');
   const [flag, setFlag] = useState(false);
   const [isEditingMode, setIsEditingMode] = useState(false);
 
-  // 初始化页码状态 - 使用对象结构保存每种试卷的页码
-  const [pageState, setPageState] = useState({});
+  // 初始化页码状态
+  const [pageState, setPageState] = useState(1);
 
   const dispatch = useDispatch();
-  const userId = 7;
+  const { userInfo } = useSelector(state => state.user);
+  const userId = userInfo?.userId || 7;
 
   // 处理页码变化
-  const handleChange = useCallback((page, paperType) => {
-    console.log(`切换到第${page}页，试卷类型:`, paperType);
-    setPageState(prev => ({
-      ...prev,
-      [paperType]: page
-    }));
+  const handleChange = useCallback((page) => {
+    console.log(`切换到第${page}页`);
+    setPageState(page);
   }, []);
-
-  // 获取当前试卷类型的页码
-  const getCurrentPage = useCallback(() => {
-    if (!selectedPaper) return 1;
-    return pageState[selectedPaper.value] || 1;
-  }, [pageState, selectedPaper]);
-
-  useEffect(() => {
-    console.log('页码状态更新:', pageState);
-  }, [pageState]);
-
-  const handleSelectChange = (value) => {
-    const selected = paperOptions.find(p => p.value === value);
-    setSelectedPaper(selected);
-    // 切换试卷类型时重置页码为1
-    if (selected && !pageState[selected.value]) {
-      setPageState(prev => ({
-        ...prev,
-        [selected.value]: 1
-      }));
-    }
-    setRefreshFlag(prev => !prev);
-  };
-
-  const [paperOptions, setPaperOptions] = useState([]);
-
-  useEffect(() => {
-    const fetchPaperList = async () => {
-      if (paperName.length > 0) {
-        const options = paperName.map(paper => ({
-          value: paper.name,
-          label: paper.name
-        }));
-        options.push({
-          value: '模拟试卷3',
-          label: '模拟试卷3'
-        });
-        setPaperOptions(options);
-      }
-    };
-    fetchPaperList();
-  }, [paperName]);
 
   useEffect(() => {
     dispatch(getPaperName());
     dispatch(getTask(userId));
   }, [dispatch]);
 
+  // 监听页码变化，加载对应数据
   useEffect(() => {
-    if (paperOptions.length > 0) {
-      setSelectedPaper(paperOptions[0]);
-    }
-  }, [paperOptions]);
+    if (!tasks?.response?.items) return;
 
-  // 监听试卷类型和页码变化，加载对应数据
-  useEffect(() => {
-    if (!tasks?.response?.items || !selectedPaper) return;
-
-    const currentPage = getCurrentPage();
-    const paperType = selectedPaper.value;
+    const currentPage = pageState;
     const itemsLength = tasks?.response?.items?.length || 0;
-
-    // 过滤当前试卷类型的任务
-    const filteredItems = tasks.response.items.filter(
-      item => item.examName === paperType
-    );
+    const filteredItems = tasks.response.items;
+    console.log(filteredItems)
     const newPapers = [];
     const startIndex = (currentPage - 1) * 10;
     const endIndex = Math.min(startIndex + 10, filteredItems.length);
-
     const processItemsSequentially = async () => {
+      // 添加空数组检查
+      if (!filteredItems || filteredItems.length === 0) {
+        console.warn('没有找到符合条件的试卷');
+        setPapers([]);
+        return;
+      }
+
       for (let i = startIndex; i < endIndex; i++) {
         try {
           const taskItem = filteredItems[i];
+          // 添加空值检查
+          if (!taskItem) {
+            console.warn(`跳过无效的试卷项: index=${i}`);
+            continue;
+          }
           const examPaperId = taskItem.examPaperId;
           const studentsInfo = await dispatch(getStudentsInfo(examPaperId));
+          console.log(studentsInfo)
           const composition = await dispatch(getComposition(studentsInfo));
+          console.log(composition)
           const selectId = [composition[0].id, composition[1].id];
           const paperId = studentsInfo.paperId;
           const studentName = taskItem.studentName;
@@ -147,7 +105,7 @@ const Evaluation = () => {
     };
 
     processItemsSequentially();
-  }, [dispatch, tasks, selectedPaper, pageState, refreshFlag]);
+  }, [dispatch, tasks, pageState, refreshFlag]);
 
   // 处理批阅提交
   const handleGradeSubmit = async (values) => {
@@ -238,13 +196,7 @@ const Evaluation = () => {
 
   // 过滤待阅试卷
   const filterPendingPapers = () => {
-    if (!selectedPaper) {
-      return [];
-    }
-    return papers.filter(paper =>
-      paper.status === '待阅' &&
-      paper.paperName === selectedPaper.value
-    );
+    return papers.filter(paper => paper.status === '待阅');
   };
 
   // 开始批阅
@@ -285,7 +237,6 @@ const Evaluation = () => {
     });
     setViewMode('grade');
   };
-
   return (
     <Spin spinning={gradeLoading || essayLoading}>
       {paperName.length > 0 && (
@@ -303,7 +254,7 @@ const Evaluation = () => {
                       {
                         title: (
                           <>
-                            {selectedPaper?.label || '请选择试卷'}
+                            所有试卷
                             <span style={{ marginLeft: 8, color: '#1890ff' }}>
                               (已阅: {papers.filter(p => p.status === '已阅').length}
                               /总数: {papers.length})
@@ -324,12 +275,9 @@ const Evaluation = () => {
                   </div> */}
                   <TaskTable
                     papers={papers}
-                    selectedPaper={selectedPaper}
-                    paperOptions={paperOptions}
-                    handleSelectChange={handleSelectChange}
                     paperName={paperName}
-                    handleChange={(page) => handleChange(page, selectedPaper?.value || '')}
-                    pageNow={getCurrentPage()}
+                    handleChange={handleChange}
+                    pageNow={pageState}
                     filterPendingPapers={filterPendingPapers}
                     setEssayLoading={setEssayLoading}
                     setCurrentPaper={setCurrentPaper}

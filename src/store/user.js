@@ -73,7 +73,12 @@ const fetchLogin = (loginForm) => {
 
         // 只有当code为1时才处理成功响应
         if (result.code === 1) {
-            dispatch(setUserInfo(result.response));
+            const userData = result.response;
+            // 存储userId到localStorage
+            if (userData.userId) {
+                localStorage.setItem('userId', userData.id);
+            }
+            dispatch(setUserInfo(userData));
             return { success: true, message: "登录成功" };
         } else {
             return { success: false, message: result.message || "登录失败" };

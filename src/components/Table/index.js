@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Tag, Button, Select } from "antd";
+import { Table, Tag, Button, Input } from "antd";
 import "../../components/Table/index.scss"
 const TaskTable = ({
     papers,
@@ -16,17 +16,21 @@ const TaskTable = ({
     setViewMode,
     setIsEditingMode
 }) => {
+    const [searchText, setSearchText] = useState('');
+
+    const handleSearchChange = (e) => {
+        setSearchText(e.target.value);
+    };
+
     return (
         <>
             <div style={{ display: 'flex', gap: '16px' }}>
-                {selectedPaper !== null && (
-                    <Select
-                        style={{ width: 200 }}
-                        value={selectedPaper?.value || paperName[0].name}
-                        options={paperOptions}
-                        onChange={handleSelectChange}
-                    />
-                )}
+                <Input
+                    style={{ width: 200 }}
+                    placeholder="输入试卷名称筛选"
+                    value={searchText}
+                    onChange={handleSearchChange}
+                />
                 {/* <Button
                     type="primary"
                     onClick={handleStartGrading}
@@ -86,7 +90,7 @@ const TaskTable = ({
                     onChange: handleChange,
                 }}
                 dataSource={papers
-                    .filter(p => p.paperName === selectedPaper?.value)
+                    .filter(p => searchText === '' || p.paperName.includes(searchText))
                     .sort((a, b) => {
                         if (a.status === '待阅' && b.status !== '待阅') return -1;
                         if (a.status !== '待阅' && b.status === '待阅') return 1;
