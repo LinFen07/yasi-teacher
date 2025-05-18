@@ -13,7 +13,6 @@ interface DataType {
   answer: string;
   isCorrect: number;
   studentAnswer: string;
-  score: number;
 }
 
 const columns: TableProps<DataType>['columns'] = [
@@ -52,16 +51,6 @@ const columns: TableProps<DataType>['columns'] = [
         >
           {record.studentAnswer}
         </p>
-      </Space>
-    ),
-  },
-  {
-    title: '得分',
-    key: '得分',
-    dataIndex: 'score',
-    render: (_, record) => (
-      <Space size="middle">
-        <p>{record.score}</p>
       </Space>
     ),
   },
