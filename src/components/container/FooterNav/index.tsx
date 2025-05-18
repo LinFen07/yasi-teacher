@@ -9,6 +9,7 @@ import { reaction } from 'mobx';
 
 type pageType = {
   title: string;
+  headTitle: string;
   questionArr: number[];
   maxNum: number;
 }
@@ -54,8 +55,16 @@ function footerNav(props: propType) {
       allLen
     );
     prevLen = currLen;
+    let headTitle = type === 'listen'
+      ? `Part${index + 1}` + ' '+ ` Questions ${prevLen - allLen + 1} - ${prevLen}`
+      : type === 'read'
+      ? `Part${index + 1}` + ' '+ ` Read the passage below and answer questions ${prevLen - allLen + 1} - ${prevLen}`
+      : type === 'writte'
+      ? `Part${index + 1}`
+      : '';
     return {
-      title: `Part${index + 1} Questions ${prevLen - allLen + 1} - ${prevLen}`,
+      title: `Part${index + 1}`,
+      headTitle,
       questionArr: questionArr,
       maxNum: currLen
     };
@@ -63,18 +72,19 @@ function footerNav(props: propType) {
 
   const [PageArr, setPageArr] = useState<Array<pageType>>([]);
 
-  useEffect(() => {
-    setPageArr(initialPageArr);
-  },[]);
-
   const handleChangeTitle = (curren: number) => {
     for(let page of PageArr){
       if(page.maxNum >= curren){
-        store.ExamStore.changeCurrentTitle(page.title);
+        store.ExamStore.changeCurrentTitle(page.headTitle);
         break;
       };
     };
   };
+
+  useEffect(() => {
+    setPageArr(initialPageArr);
+    store.ExamStore.changeCurrentTitle(initialPageArr[0].headTitle);
+  },[]);
 
   const activeAction = (e: any) => {
     if(e.target.tagName == 'UL' || e.target.tagName == 'LI') return;

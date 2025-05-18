@@ -105,7 +105,7 @@ function questions({exam}: {exam: Exam[]}) {
                     {stripHtmlTags(questionArr.title)}
                   </div>
               }
-              <div >
+              <div>
                 {
                   questionArr.questionType == '1'
                   ? (<Radio.Group style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
@@ -140,6 +140,7 @@ function questions({exam}: {exam: Exam[]}) {
                     :<></>
                 }
               </div>
+              <div style={{height: '24px'}}></div>
             </div>
           ))
         }

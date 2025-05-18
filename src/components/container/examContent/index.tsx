@@ -8,6 +8,7 @@ import ListenQuestions from '@/components/basic/listenQuestions';
 import ReadQuestions from '@/components/basic/readQuestions'
 import WritteQuestions from '@/components/basic/writteQuestions';
 import { useEventListener } from '@/hooks/core/useEventListener';
+import { computedPrevCount } from '@/utils/computedPrevCount';
 
 const { TextArea } = Input;
 
