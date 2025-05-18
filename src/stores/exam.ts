@@ -16,6 +16,7 @@ class ExamStore {
 
   //听力录音
   listenAudio: string = '';
+  audioVolume = 30;
 
   exam: Array<Exam>  = [];
   listenExam: Array<Exam> = [];
@@ -63,6 +64,7 @@ class ExamStore {
       studentListenAnswers: this.studentListenAnswers,
       studentReadAnswers: this.studentReadAnswers,
       correctWritte: this.correctWritte,
+      audioVolume: this.audioVolume,
     };
     localStorage.setItem('examStore', JSON.stringify(data));
   }
@@ -86,6 +88,7 @@ class ExamStore {
       this.studentListenAnswers = parsedData.studentListenAnswers || Array(50).fill('');
       this.studentReadAnswers = parsedData.studentReadAnswers || Array(50).fill('');
       this.correctWritte = parsedData.correctWritte || Array(2).fill('');
+      this.audioVolume = parsedData.audioVolume || 30;
     }
   }
 
@@ -181,6 +184,9 @@ class ExamStore {
   }
   changeStudentReadAnswer(index: number, answer: string){
     this.studentReadAnswers[index] = answer;
+  }
+  changeAusioVolume(volume: number) {
+    this.audioVolume = volume;
   }
 }
 

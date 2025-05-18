@@ -78,11 +78,8 @@ const HeadTip = forwardRef((props: propType) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleVolumeChange = (value: number) => {
-    if (audioRef.current) {
-      audioRef.current.volume = value / 100; // 将 Slider 的值（0-100）转换为音量范围（0-1）
-    }
+    stores.ExamStore.changeAusioVolume(value);
   };
-
   
   return(
     <div className='head'>
