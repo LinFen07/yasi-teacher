@@ -23,10 +23,6 @@ export default function Video() {
           console.log(response);
           stores.ExamStore.addExam(response.titleItems);
           stores.ExamStore.addListenAudio(response.audioFileUrl);
-          const au = document.querySelector("audio");
-          if(au) {
-            au.src = response.audioFileUrl;
-          } 
           AddCorrect(response.titleItems);
         }
       } catch (error) {
@@ -36,13 +32,6 @@ export default function Video() {
 
     fetchExamData();
   }, [id]);
-
-  // useEffect(() => {
-  //   const au = document.querySelector("audio");
-  //   if(au) {
-  //     au.src = stores.ExamStore.getListenAudio();
-  //   } 
-  // },[])
 
   function handleClick() {
     const au = document.querySelector("audio");
