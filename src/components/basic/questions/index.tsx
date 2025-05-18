@@ -28,7 +28,6 @@ function questions({exam}: {exam: Exam[]}) {
     stores.ExamStore.changeStudentListenAnswer(pre + index + 1, e.target.value);
     const examIndex = +stores.ExamStore.currentExamTitle[4] - 1;
     const value  = e.target.value;
-    console.log('onChange',index + pre);
 
     //向数据提交答案
     submitStudentSelectAnswer(questionsArr, index, value, index + pre);

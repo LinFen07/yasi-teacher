@@ -1,7 +1,7 @@
 
 import stores from '@/stores';
 import type { Exam, ExamType } from '@/typings/exam';
-import { runInAction } from 'mobx';
+import { autorun, runInAction } from 'mobx';
 import  {computedPrevCount}  from '@/utils/computedPrevCount';
 import { submitStudentBlankAnswer } from './submitAnswer';
 export function createInput(exam: Array<Exam>, type: string) {
@@ -25,11 +25,19 @@ export function createInput(exam: Array<Exam>, type: string) {
       }
     }
   },0)
+
+  // 👇 添加 autorun 来监听字体大小变化
+  autorun(() => {
+    const fontSize = stores.ExamStore.FontSize;
+    const inputs = document.querySelectorAll<HTMLInputElement>('.textInput');
+    inputs.forEach(input => {
+      input.style.fontSize = `${fontSize}px`;
+    });
+  });
 }
 
 export function MyInput(index: number, span: any, prevCount: number, questionArr: ExamType, type: string) {
   let len = index + questionArr.items.length;
-  console.log('createInput', index, len, span);
   for (let i = index; i < len; i++) {
     const wrapper = document.createElement('div');
     wrapper.className = 'input-wrapper';
