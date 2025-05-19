@@ -9,6 +9,13 @@ export const fetchLogin =
       })
 }
 
+export const getStudentId = async(name: string) => {
+  return request({
+    url: `/api/student/user/selectByUserName?userName=${name}`,
+    method: 'POST'
+  })
+}
+
 export const fetchLogout = async() => {
   return request({
     url: '/api/user/logout',

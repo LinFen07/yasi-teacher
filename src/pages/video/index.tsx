@@ -6,11 +6,15 @@ import { select } from "@/api/examPaper";
 import { useEffect } from "react";
 import stores from "@/stores";
 import { AddCorrect } from "@/utils/getCorrect";
+import { CheckOutlined } from '@ant-design/icons';
+
 const IeltsFamiliarisationTest: React.FC = () => {
   const id  = new URLSearchParams(window.location.search).get("id") || 0;
-  const type = new URLSearchParams(window.location.search).get("type") || ''
+  const type = new URLSearchParams(window.location.search).get("type") || '';
   const [listenCompelete, setListenCompelete] = useState(false);
   const [readCompelete, setReadCompekete] = useState(false);
+  const [writteCompelete, setWritteCompelete] = useState(false);
+  const [noteVisible, setNoteVisible] = useState(true);
 
   useEffect(() => {
     stores.ExamStore.changePaperId(+id);
@@ -36,10 +40,12 @@ const IeltsFamiliarisationTest: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if(type == 'listen' || type == 'read')
+    if(type == 'listen' || type == 'read' || type == 'writte')
       setListenCompelete(true);
-    if(type == 'read')
+    if(type == 'read' || type == 'writte')
       setReadCompekete(true);
+    if(type == 'writte')
+      setWritteCompelete(true);
   },[type])
 
   return (
@@ -70,7 +76,11 @@ const IeltsFamiliarisationTest: React.FC = () => {
             ? <ExamExplainVideo type='listen'></ExamExplainVideo>
             : <></>
           }
-          
+          {
+            listenCompelete 
+            ? <CheckOutlined className='video-complete-icon'/>
+            : <></>
+          }
         </div>
         {/* Reading Card */}
         <div style={{
@@ -87,6 +97,11 @@ const IeltsFamiliarisationTest: React.FC = () => {
           {
             type === 'listen'
             ? <ExamExplainVideo type='read'></ExamExplainVideo>
+            : <></>
+          }
+          {
+            readCompelete 
+            ? <CheckOutlined className='video-complete-icon'/>
             : <></>
           }
         </div>
@@ -107,14 +122,23 @@ const IeltsFamiliarisationTest: React.FC = () => {
             ? <ExamExplainVideo type='writte'></ExamExplainVideo>
             : <></>
           }
+          {
+            writteCompelete 
+            ? <CheckOutlined className='video-complete-icon'/>
+            : <></>
+          }
         </div>
         {/* Yellow Note */}
-        <div className='exam-video-explain-note-container'>
-          <div className='note-close-button'>×</div>
-          <div style={{ color: '#222', fontSize: 16, lineHeight: 1.6 }}>
-            To see the instructions for the test, click on the arrow (▼) and press play; after that, click 'I confirm' and then 'Start' to start the test. In the real test you’ll only be able to see this once.
-          </div>
-        </div>
+        {
+          noteVisible
+          ? <div className='exam-video-explain-note-container'>
+              <div className='note-close-button' onClick={() => setNoteVisible(false)}>×</div>
+              <div style={{ color: '#222', fontSize: 16, lineHeight: 1.6 }}>
+                To see the instructions for the test, click on the arrow（V）and press play, after that, click “ I confirm” and then “Start” to start the test. In the test you’ll only be able to see this once. 
+              </div>
+            </div>
+          : <></>
+        }
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { getExam } from "@/api/examPaper";
 import { useEffect, useState } from 'react';
 import stores from '@/stores';
+import { getStudentId } from '@/api/login';
 
 const { Meta } = Card;
 
@@ -25,13 +26,27 @@ const Dashboard = () => {
     setExamList(res.response.items);
   }
 
+  const fetchGetStudentId = async() => {
+    const res = await getStudentId(stores.UserStore.name);
+    // @ts-ignore
+    stores.UserStore.setUserId(res.response.value);
+  }
+
   useEffect(() => {
     try {
-      getExamList()
+      fetchGetStudentId()
     } catch (error) {
       console.log(error);
     }
   },[])
+
+  useEffect(() => {
+    try {
+      getExamList();
+    } catch (error) {
+      console.log(error);
+    }
+  },[stores.UserStore.userId])
 
   const handleConfirmExam = async(id: number) => {
     window.open(`/video?id=${id}`, '_blank');
