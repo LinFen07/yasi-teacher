@@ -68,24 +68,30 @@ const ScoringPanel = ({
             >
                 <div style={{ marginBottom: 16 }}>
                     <h3 style={{ marginBottom: 8 }}>作文标题</h3>
-                    <div
-                        dangerouslySetInnerHTML={{
-                            __html: essayTitle?.title || essayTitle?.content || '无标题'
-                        }}
-                        style={{
-                            border: '1px solid #f0f0f0',
-                            padding: 16,
-                            borderRadius: 4,
-                            background: '#fff',
-                            marginBottom: 16
-                        }}
-                    />
-                    <h3 style={{ marginBottom: 8 }}>作文内容</h3>
-                    <TextArea
-                        value={convertToText(studentAnswer) || ''}
-                        readOnly
-                        style={{ flex: 1, width: '100%', resize: 'none', marginBottom: 16 }}
-                    />
+                    {(!paperData || !paperData.composition || paperData.composition.length === 0) ? (
+                        <div style={{ textAlign: 'center', padding: 24, fontSize: 16 }}>考生未答题</div>
+                    ) : (
+                        <>
+                            <div
+                                dangerouslySetInnerHTML={{
+                                    __html: essayTitle?.title || essayTitle?.content || '无标题'
+                                }}
+                                style={{
+                                    border: '1px solid #f0f0f0',
+                                    padding: 16,
+                                    borderRadius: 4,
+                                    background: '#fff',
+                                    marginBottom: 16
+                                }}
+                            />
+                            <h3 style={{ marginBottom: 8 }}>作文内容</h3>
+                            <TextArea
+                                value={convertToText(studentAnswer) || ''}
+                                readOnly
+                                style={{ flex: 1, width: '100%', resize: 'none', marginBottom: 16 }}
+                            />
+                        </>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
                         <Button
                             onClick={() => setCount(1)}

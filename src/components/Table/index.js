@@ -53,19 +53,6 @@ const TaskTable = ({
                     >
                         筛选
                     </Button>
-                    <span style={{ marginLeft: 16, color: '#1890ff' }}>
-                        已阅: {papers
-                            .filter(p => 
-                                (activeSearchText === '' || p.paperName.includes(activeSearchText)) &&
-                                (activeSearchName === '' || p.studentName.includes(activeSearchName)) &&
-                                p.status === '已阅'
-                            ).length}
-                        /总数: {papers
-                            .filter(p => 
-                                (activeSearchText === '' || p.paperName.includes(activeSearchText)) &&
-                                (activeSearchName === '' || p.studentName.includes(activeSearchName))
-                            ).length}
-                    </span>
                 </div>
             </Form>
             <Table
@@ -119,11 +106,11 @@ const TaskTable = ({
                     onChange: handleChange,
                 }}
                 dataSource={papers
-                    .filter(p => 
+                    .filter(p =>
                         (activeSearchText === '' || p.paperName.includes(activeSearchText)) &&
                         (activeSearchName === '' || p.studentName.includes(activeSearchName))
                     )
-                    .map(item => ({...item, key: `${item.examPaperId}-${item.studentId}`}))
+                    .map(item => ({ ...item, key: `${item.examPaperId}-${item.studentId}` }))
                     .sort((a, b) => {
                         if (a.status === '待阅' && b.status !== '待阅') return -1;
                         if (a.status !== '待阅' && b.status === '待阅') return 1;

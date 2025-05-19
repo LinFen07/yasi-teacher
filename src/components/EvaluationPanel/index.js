@@ -402,7 +402,7 @@ const EvaluationPanel = ({
                                                     <path d="M32 56C45.2548 56 56 45.2548 56 32C56 18.7452 45.2548 8 32 8C18.7452 8 8 18.7452 8 32C8 45.2548 18.7452 56 32 56Z" stroke="#666" strokeWidth="2" />
                                                     <path d="M32 24V32M32 40H32.02" stroke="#666" strokeWidth="2" strokeLinecap="round" />
                                                 </svg>
-                                                <div>暂无答题数据</div>
+                                                <div>考生未答题</div>
                                             </>
                                         )}
                                     </div>
