@@ -1,6 +1,6 @@
 .examBox {
   display: flex;
-  flex-flow: column;
+  flex-direction: row; 
   height: 100vh;
 }
 
@@ -17,4 +17,8 @@
 .footer {
   height: 74px;
   background-color: #dce5f6;
+}
+
+.exam-note-container {
+  width: 15%;
 }

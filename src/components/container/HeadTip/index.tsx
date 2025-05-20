@@ -1,7 +1,7 @@
 import { useEffect, useState, forwardRef } from 'react'
 import { useNavigate } from 'react-router';
 import { Button, Space, Avatar, Slider, Modal, Dropdown } from 'antd'
-import { FieldTimeOutlined, SoundOutlined, DownOutlined } from '@ant-design/icons'
+import { FieldTimeOutlined, SoundOutlined, DownOutlined, FormOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd';
 import './index.scss'
 import IntegerStep from '@/components/basic/fontSizeSetting';
@@ -27,6 +27,7 @@ type propType = {
 
 const HeadTip = forwardRef((props: propType) => {
   const testTime: number = props.type == 'listen' ? 30 : 60;
+  const examstore = stores.ExamStore;
 
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
   const [seconds, setSeconds] = useState<number>(0);
@@ -54,28 +55,28 @@ const HeadTip = forwardRef((props: propType) => {
 
   const finish = (type: string) => {
     if(type === 'listen'){
-      navigate(`/video?id=${stores.ExamStore.paperId}&type=read`, { replace: true });
+      navigate(`/video?id=${examstore.paperId}&type=read`, { replace: true });
       requestConcurrency(stores.AnswerStore.completedAnswers);
       stores.AnswerStore.clearAnswers(type);
     }else if(type === 'read'){
-      navigate(`/video?id=${stores.ExamStore.paperId}&type=writte`, { replace: true });
+      navigate(`/video?id=${examstore.paperId}&type=writte`, { replace: true });
       requestConcurrency(stores.AnswerStore.completedAnswers);
       stores.AnswerStore.clearAnswers(type);
     }else if(type === 'writte'){
       navigate('/testOver',{ replace: true });
-      submitStudentWritteAnswer(stores.ExamStore.wirrteExam[0].questionItems[0], 0, stores.ExamStore.correctWritte[0]);
-      submitStudentWritteAnswer(stores.ExamStore.wirrteExam[1].questionItems[0], 1, stores.ExamStore.correctWritte[1]);
+      submitStudentWritteAnswer(examstore.wirrteExam[0].questionItems[0], 0, examstore.correctWritte[0]);
+      submitStudentWritteAnswer(examstore.wirrteExam[1].questionItems[0], 1, examstore.correctWritte[1]);
       requestConcurrency(stores.AnswerStore.writingAnswers);
       stores.AnswerStore.resetLocalStorage();
-      stores.ExamStore.resetLocalStorage();
+      examstore.resetLocalStorage();
     }
-    stores.ExamStore.changeCurrent(1);
-    stores.ExamStore.changeCurrentTitle('Part1');
-    stores.ExamStore.resetcorrectListenAnswer();
+    examstore.changeCurrent(1);
+    examstore.changeCurrentTitle('Part1');
+    examstore.resetcorrectListenAnswer();
   };
 
   const handleVolumeChange = (value: number) => {
-    stores.ExamStore.changeAusioVolume(value);
+    examstore.changeAusioVolume(value);
   };
   
   return(
@@ -104,7 +105,6 @@ const HeadTip = forwardRef((props: propType) => {
                <Slider defaultValue={30} className='slider' onChange={handleVolumeChange}/>
                <p style={{marginLeft: '8px'}}>Audio is playing</p>
               </Space>
-              
             </div>
           : <></>
         }
@@ -112,6 +112,7 @@ const HeadTip = forwardRef((props: propType) => {
       <div className='headRight'>
         <Space size={24}>
           <Button size='large' onClick={() => setModalOpen(true)}>Finish Text</Button>
+          <div className='head-note-icon' onClick={stores.helperStore.changerNoteView}><FormOutlined /></div>
           <div style={{fontSize: '16px'}}>
             <Dropdown menu={{ items }} trigger={['click']}>
               <a onClick={(e) => e.preventDefault()}>

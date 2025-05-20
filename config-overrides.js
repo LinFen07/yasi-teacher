@@ -43,7 +43,7 @@ function splitChunks(config) {
 
 module.exports = override(
   // 禁用 source map
-  disableSourceMap,
+  // disableSourceMap,
 
   // 添加 webpack 别名
   addWebpackAlias({
@@ -51,7 +51,7 @@ module.exports = override(
   }),
 
   // 拆分 chunks
-  splitChunks,
+  // splitChunks,
 
   // 自定义 devServer 配置
   function (config, env) {

@@ -37,6 +37,7 @@ export function createInput(exam: Array<Exam>, type: string) {
 }
 
 export function MyInput(index: number, span: any, prevCount: number, questionArr: ExamType, type: string) {
+  console.log('createInput', index, span, prevCount, questionArr);
   let len = index + questionArr.items.length;
   for (let i = index; i < len; i++) {
     const wrapper = document.createElement('div');
