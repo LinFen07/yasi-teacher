@@ -71,6 +71,7 @@ function questions({exam}: {exam: Exam[]}) {
     titleRefs.current[questionIndex - prevCount - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     const inputAll = document.querySelectorAll('.textInput');
+    console.log('inputAll', questionIndex);
     //@ts-ignore
     inputAll[questionIndex - BlanksprevCount - 1]?.focus();
     inputAll[questionIndex - BlanksprevCount - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });

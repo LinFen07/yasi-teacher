@@ -4,18 +4,22 @@ import type { Exam, ExamType } from '@/typings/exam';
 import { autorun, runInAction } from 'mobx';
 import  {computedPrevCount}  from '@/utils/computed';
 import { submitStudentBlankAnswer } from './submitAnswer';
-export function createInput(exam: Array<Exam>, type: string) {
+export function createInput(exam: Array<Exam>, type: string, container: any) {
   let prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
   const index = +stores.ExamStore.currentExamTitle[4] - 1;
 
+  const allSpans = container.querySelectorAll('.gapfilling-span');
+  allSpans.forEach((span: any) => {
+    span.innerHTML = '';
+  });
   setTimeout(() => {
-    const span = document.querySelectorAll('.gapfilling-span');
+    const span = container.querySelectorAll('.gapfilling-span');
     if (span.length > 0) {
       let currIndex = 0;
       for (let j = 0; j < exam[index].questionItems.length; j++) {
         const questionArr = exam[index].questionItems[j];
         if (questionArr.topicType == '4' || questionArr.topicType == '6') {
-          MyInput(currIndex, span, prevCount, questionArr, type);
+          MyInput(currIndex, span, prevCount, questionArr);
           currIndex += questionArr.items.length;
         } else if (questionArr.topicType == '2' || questionArr.topicType == '5') {
           prevCount += questionArr.correctArray.length;
@@ -24,9 +28,8 @@ export function createInput(exam: Array<Exam>, type: string) {
         }
       }
     }
-  },0)
+  })
 
-  // 👇 添加 autorun 来监听字体大小变化
   autorun(() => {
     const fontSize = stores.ExamStore.FontSize;
     const inputs = document.querySelectorAll<HTMLInputElement>('.textInput');
@@ -36,8 +39,8 @@ export function createInput(exam: Array<Exam>, type: string) {
   });
 }
 
-export function MyInput(index: number, span: any, prevCount: number, questionArr: ExamType, type: string) {
-  console.log('createInput', index, span, prevCount, questionArr);
+export function MyInput(index: number, span: any, prevCount: number, questionArr: ExamType) {
+  // console.log('createInput', index, span, prevCount, questionArr);
   let len = index + questionArr.items.length;
   for (let i = index; i < len; i++) {
     const wrapper = document.createElement('div');

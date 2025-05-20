@@ -92,6 +92,7 @@ function footerNav(props: propType) {
 
   useEffect(() => {
     setPageArr(initialPageArr);
+    setCurren(store.ExamStore.currentExamIndex);
     store.ExamStore.changeCurrentTitle(initialPageArr[0].title);
     store.ExamStore.changeTitleExpain(initialPageArr[0].headTitleExpain);
   },[]);
@@ -99,6 +100,7 @@ function footerNav(props: propType) {
   const activeAction = (e: any) => {
     if(e.target.tagName == 'UL' || e.target.tagName == 'LI') return;
     store.ExamStore.changeCurrent(+e.target.innerHTML);
+    setCurren(store.ExamStore.currentExamIndex);
     handleChangeTitle(+e.target.innerHTML);
   };
 
@@ -113,10 +115,6 @@ function footerNav(props: propType) {
       handleChangeTitle(curren + 1);
     }
   };
-
-  useEffect(() => {
-    setCurren(store.ExamStore.currentExamIndex);
-  },[store.ExamStore.currentExamIndex]);
 
   const [correctAnswers, setCorrectAnswers] = useState(store.ExamStore.correctListenAnswer);
 

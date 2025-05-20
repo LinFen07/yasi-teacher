@@ -16,7 +16,7 @@ const questions = () => {
   useEffect(() => {
     const index = +stores.ExamStore.currentExamTitle[4] - 1;
     setListensArr(exam[index]);
-    createInput(exam, 'listen');
+    // createInput(exam, 'listen');
   },[stores.ExamStore.currentExamTitle]);
 
   return (
