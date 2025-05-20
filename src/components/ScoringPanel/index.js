@@ -88,7 +88,7 @@ const ScoringPanel = ({
                             <TextArea
                                 value={convertToText(studentAnswer) || ''}
                                 readOnly
-                                style={{ flex: 1, width: '100%', resize: 'none', marginBottom: 16 }}
+                                style={{ flex: 1, width: '100%', height: '190px', resize: 'none', marginBottom: 20 }}
                             />
                         </>
                     )}
@@ -161,9 +161,9 @@ const ScoringPanel = ({
                                 <TextArea rows={4} placeholder="请输入对作文的评价" />
                             </div> */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
-                                <Button onClick={onCancel}>返回</Button>
+                                {/* <Button onClick={onCancel}>返回</Button> */}
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit">   {isEditingMode ? '保存修改' : '提交评价'}</Button>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100%' }}>   {isEditingMode ? '保存修改' : '提交评价'}</Button>
                                 </Form.Item>
                             </div>
                         </Form>

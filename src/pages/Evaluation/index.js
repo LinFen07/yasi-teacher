@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { getComposition, getConfrim, getStudentsAnswers, getStudentsInfo, getTask, selectNameById } from "../../store/tasks";
 import 'react-quill/dist/quill.snow.css';
+import { useNavigate } from "react-router-dom";
 import { Table, Button, Tag, Card, Spin, Select, Statistic, Breadcrumb, Form } from "antd";
+import { LeftOutlined } from '@ant-design/icons';
 import ScoringPanel from "../../components/ScoringPanel";
 import EvaluationPanel from "../../components/EvaluationPanel";
 import { fetchCompositionInfo, fetchArticle, updatePaperStatus, getAppraise, getPaperName } from '../../store/tasks';
@@ -32,6 +34,7 @@ const Evaluation = () => {
   const { userInfo } = useSelector(state => state.user);
   const userId = userInfo?.userId || 7;
 
+  const navigate = useNavigate()
   // 处理页码变化
   const handleChange = useCallback((page) => {
     console.log(`切换到第${page}页`);
@@ -300,6 +303,14 @@ const Evaluation = () => {
             {viewMode === 'grade' && currentPaper && (
               <Card style={{ width: '100%', padding: 24 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  <div style={{ position: 'relative' }}>
+                    <Button
+                      type="primary"
+                      onClick={() => setViewMode('list')}
+                      style={{ position: 'absolute', left: -40, top: -20 }}
+                      icon={<LeftOutlined />}
+                    />
+                  </div>
                   <Card style={{ width: '100%' }}>
                     <EvaluationPanel
                       form={form}

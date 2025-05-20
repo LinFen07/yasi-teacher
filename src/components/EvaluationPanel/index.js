@@ -86,7 +86,7 @@ const EvaluationPanel = ({
                             return {
                                 id: group.questionId,
                                 studentAnswer: group.answers.join(' / '),
-                                correctAnswer: group.correctAnswer || '无',
+                                correctAnswer: detailResponse.correct || detailResponse.correctArray || '无',
                                 isCorrect: group.isCorrects.includes(1) ? 1 : 0,
                                 score: (group.scores.reduce((a, b) => a + b, 0) / group.scores.length).toFixed(1),
                                 questionDetail: detailResponse.title || '无题目详情',
@@ -156,7 +156,7 @@ const EvaluationPanel = ({
             key: 'correctAnswer',
             align: 'center',
             width: 200,
-            render: text => text || '无'
+            render: text => convertHtmlToText(text) || '无'
         },
         {
             title: '题目详情',
@@ -255,7 +255,7 @@ const EvaluationPanel = ({
                 >
                     <div style={{
                         width: '480px',
-                        height: '500px',
+                        height: '520px',
                         paddingRight: '8px',
                         overflow: 'hidden',
                         display: 'flex',
@@ -268,13 +268,13 @@ const EvaluationPanel = ({
                                 flex: 1,
                                 display: 'flex',
                                 flexDirection: 'column',
-                                overflow: 'hidden',
+                                overflowY: 'auto',
                                 touchAction: 'pan-y'
                             }}
                         >
                             <Spin spinning={loading} tip="数据加载中..." size="large">
                                 {answers.length > 0 ? (
-                                    isEditingMode ? (
+                                    !isEditingMode ? (
                                         <>
                                             <Carousel
                                                 dots={false}
@@ -316,8 +316,8 @@ const EvaluationPanel = ({
                                                                         </Button>
                                                                     }
                                                                 >
-                                                                    <p><strong>学生答案：</strong> {item.studentAnswer || '无'}</p>
-                                                                    <p><strong>正确答案：</strong> {item.correctAnswer || '无'}</p>
+                                                                    <p><strong>学生答案：</strong> {item.studentAnswer ? (item.studentAnswer.length > 30 ? `${item.studentAnswer.substring(0, 30)}...` : item.studentAnswer) : '无'}</p>
+                                                                    <p><strong>正确答案：</strong> {convertHtmlToText(item.correctAnswer) || '无'}</p>
                                                                     <p>
                                                                         <strong>状态：</strong>
                                                                         {item.isCorrect === 2 ? (
@@ -334,7 +334,7 @@ const EvaluationPanel = ({
                                                                 </Card>
                                                             ))}
                                                         </div>
-                                                        <div style={{
+                                                        {/* <div style={{
                                                             display: 'flex',
                                                             justifyContent: 'space-between',
                                                             alignItems: 'center',
@@ -353,7 +353,7 @@ const EvaluationPanel = ({
                                                             >
                                                                 下一页
                                                             </Button>
-                                                        </div>
+                                                        </div> */}
                                                     </div>
                                                 ))}
                                             </Carousel>
@@ -415,6 +415,7 @@ const EvaluationPanel = ({
                     {/* 右侧：评价编辑器 */}
                     <div style={{
                         width: isEditingMode ? '720px' : '100%',
+                        height: '520px',
                         paddingLeft: '8px',
                         overflow: 'hidden',
                         flexShrink: 0
@@ -434,7 +435,12 @@ const EvaluationPanel = ({
                                     }}
                                 />
                             </Card> */}
-                            <Card title={isEditingMode ? "修改评价" : "撰写评价"} style={{ flex: 1 }}>
+                            <Card title={isEditingMode ? "修改评价" : "撰写评价"} style={{
+                                flex: 1,
+                                maxWidth: '800px',
+                                margin: '0 ',
+                                width: '60%'
+                            }}>
                                 <div style={{ marginBottom: 8 }}>
                                     <strong>原评价：</strong>
                                     <div
@@ -466,21 +472,28 @@ const EvaluationPanel = ({
                                         value={editorContent}
                                         onChange={setEditorContent}
                                         modules={{
-                                            toolbar: [
-                                                [{ 'header': [1, 2, false] }],
-                                                ['bold', 'italic', 'underline', 'strike'],
-                                                [{ 'color': [] }, { 'background': [] }],
-                                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                                ['link', 'image'],
-                                                ['clean']
-                                            ]
+                                            toolbar: {
+                                                container: [
+                                                    [{ 'header': [1, 2, false] }],
+                                                    ['bold', 'italic', 'underline', 'strike'],
+                                                    [{ 'color': [] }, { 'background': [] }],
+                                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                                    ['link', 'image'],
+                                                    ['clean']
+                                                ]
+                                            },
+                                            clipboard: {
+                                                matchVisual: false
+                                            }
                                         }}
                                         placeholder="请输入对试卷整体的评价..."
                                         style={{
                                             height: '250px',
-                                            border: '1px solid #d9d9d9',
-                                            borderRadius: '4px',
-                                            background: '#fff'
+                                            width: '100%',
+                                            borderRadius: '6px',
+                                            background: '#fff',
+                                            display: 'flex',
+                                            flexDirection: 'column'
                                         }}
                                     />
                                 </Form.Item>
@@ -516,7 +529,7 @@ const EvaluationPanel = ({
                     </div>
                     <div style={{ marginBottom: 24 }}>
                         <h4>正确答案</h4>
-                        <p>{currentDetail.correctAnswer}</p>
+                        <p>{convertHtmlToText(currentDetail.correctAnswer)}</p>
                     </div>
                     <div style={{ marginBottom: 24 }}>
                         <h4>得分</h4>
