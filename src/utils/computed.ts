@@ -16,8 +16,8 @@ export function computedPrevCount(title: string, exam: Array<Exam>): number {
 export function computedBlanksPrevCount(pre: number, title: string, exam: Array<Exam>){
   const index = +title[4] - 1;
     for(let j = 0; j < exam[index].questionItems.length; j++){
-      if(exam[index].questionItems[j].questionType == '4') return pre;
-      else if(exam[index].questionItems[j].questionType == '2') pre += exam[index].questionItems[j].correctArray.length;
+      if(exam[index].questionItems[j].topicType == '4') return pre;
+      else if(exam[index].questionItems[j].topicType == '2') pre += exam[index].questionItems[j].correctArray.length;
       else pre++;
     }
   return pre;
@@ -46,6 +46,18 @@ export function computedDragPrevCount(title: string, exam: Array<Exam>){
         || exam[index].questionItems[j].questionType == '4'
       ) 
       prevCount += exam[index].questionItems[j].correctArray.length;
+      else prevCount++;
+    }
+  return prevCount;
+}
+
+export function computedCheckSelectPrevCount(title: string, exam: Array<Exam>){
+  let prevCount = computedPrevCount(title, exam);
+  const index = +title[4] - 1;
+    for(let j = 0; j < exam[index].questionItems.length; j++){
+      if(exam[index].questionItems[j].topicType == '2') return prevCount;
+      else if(exam[index].questionItems[j].questionType == '4') 
+        prevCount += exam[index].questionItems[j].correctArray.length;
       else prevCount++;
     }
   return prevCount;

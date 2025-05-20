@@ -53,9 +53,8 @@ const IeltsFamiliarisationTest: React.FC = () => {
       <div style={{ borderBottom: '1px solid #000', margin: '0 0 24px 0' }}></div>
       <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
         <h1 style={{ color: '#d81b3a', fontWeight: 400, fontSize: 32, margin: '0 0 32px 0', textAlign: 'left' }}>
-          IELTS Familiarisation Test
+          ZY English Language Test Platform
         </h1>
-        {/* <div style={{ fontWeight: 600, color: '#555', marginBottom: 8 }}>Today</div> */}
         <ExpainVideoCard type ='listen' isCompeleted= {listenCompelete} isShowVideo={type == 'listen'}/>
         <ExpainVideoCard type ='read' isCompeleted= {readCompelete} isShowVideo={type == 'read'}/>
         <ExpainVideoCard type ='writte' isCompeleted= {writteCompelete} isShowVideo={type == 'writte'}/>

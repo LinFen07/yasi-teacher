@@ -4,7 +4,7 @@ import stores from '@/stores';
 import ReactHtmlParser from 'react-html-parser';
 import { observer } from 'mobx-react';
 import { runInAction } from 'mobx';
-import  { computedBlanksPrevCount, computedPrevCount }  from '@/utils/computed';
+import  { computedBlanksPrevCount, computedCheckSelectPrevCount, computedPrevCount }  from '@/utils/computed';
 import { submitStudentSelectAnswer } from '@/utils/submitAnswer'
 import  TickQuestion  from '../tickQuestion/index'
 import DragQuestion from '../dragQuestion';
@@ -46,7 +46,7 @@ function questions({exam}: {exam: Exam[]}) {
   };
 
   const checkedOnChange = (index: number) => (checkedValues: string[]) =>{
-    let pre = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    const pre = computedCheckSelectPrevCount(stores.ExamStore.currentExamTitle, exam);
     stores.ExamStore.changeStudentListenAnswer(pre + index + 1,checkedValues.toString());
     const examIndex = +stores.ExamStore.currentExamTitle[4] - 1;
 
@@ -60,7 +60,9 @@ function questions({exam}: {exam: Exam[]}) {
     setQuestionArr(newQuestionsArr);
     stores.ExamStore.updateListenExam(examIndex, index, updatedQuestions);
     runInAction(() => {
-      stores.ExamStore.correctListenAnswer.push(pre + index + 1);
+      for(let i = 0; i < questionsArr[index].correctArray.length; i++) {
+        stores.ExamStore.correctListenAnswer.push(pre + 1 + index + i);
+      }
     });
   }
 
@@ -102,7 +104,6 @@ function questions({exam}: {exam: Exam[]}) {
       el.setAttribute('style', currentStyle);
     });
 
-    const serializer = new XMLSerializer();
     return doc.body.innerHTML;
   };
 

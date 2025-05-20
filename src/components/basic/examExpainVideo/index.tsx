@@ -8,6 +8,12 @@ export default function ExamExplainVideo({type}: {type: string}) {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [videoUrl, setVideoUrl] = useState('')
   const navigate = useNavigate();
+  const title = 
+    type == 'listen' 
+    ? 'Listening'
+    : type == 'read'
+    ? 'Reading'
+    : 'Writting'
 
   useEffect(() => {
     switch(type) {
@@ -55,7 +61,10 @@ export default function ExamExplainVideo({type}: {type: string}) {
             <video className="exam-expain-video" controls src={videoUrl} />
             {
               isConfirmed 
-              ? <button className="video-confirm-button" onClick={handlerStart}><ArrowRightOutlined style={{marginRight: '12px'}}/>Start Reading</button>
+              ? <button className="video-confirm-button" onClick={handlerStart}>
+                  <ArrowRightOutlined style={{marginRight: '12px'}}/>
+                  Start {title}
+                </button>
               : <div className="video-confirm-container">
                   <h4 className="video-ready">Ready?</h4>
                   <p style={{fontSize: '18px'}}>Please confirm that you have understood the instructions above.</p>
