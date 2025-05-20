@@ -1,17 +1,13 @@
 
 import { useNavigate } from "react-router";
-
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input, Flex, message, Select  } from 'antd';
-import { Cascader } from 'antd';
+import { Button, Checkbox, Form, Input, Flex, message, Select, Cascader  } from 'antd';
 
 import { fetchRegister, getExamMeal } from "@/api/register";
 import { fetchLogin } from '@/api/login'
 import stores from "@/stores";
 import './index.scss'
-//@ts-ignore
-import img from '@/assets/logo2.png'
-// @ts-ignore
+
 import {citys} from '@/utils/ChinaCitys2025'
 import { useEffect, useState } from "react";
 
@@ -54,7 +50,6 @@ function LoginRoute(props: Props) {
       res = await fetchLogin(va);
       //@ts-ignore
       if(res.code == 1) {
-        // stores.UserStore.setUserId(res.data.id);
         const cookies = document.cookie;
         console.log(cookies);
         stores.UserStore.login(cookies);
@@ -86,9 +81,9 @@ function LoginRoute(props: Props) {
   };
 
   return (
-    <div className="lowin  lowin-blue">
+    <div className="lowin lowin-blue">
       <div className ="lowin-brand">
-        <img src={img} alt="logo" style={{marginTop: '12px'}} />
+        <img src='http://111.230.5.159:9000/yasi/logo/logo%20(3).png' alt="logo" />
       </div>
       <div className="lowin-wrapper">
         <div className="lowin-box lowin-login">

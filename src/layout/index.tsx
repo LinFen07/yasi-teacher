@@ -52,7 +52,7 @@ const Index: React.FC = observer(() => {
     <Layout>
       <Header className='headNav' >
         <div>
-          <img src={img} className='navImg'/>
+          <img src='http://111.230.5.159:9000/yasi/logo/logo%20(4).png' className='navImg'/>
         </div>
         <Menu
           theme="dark"

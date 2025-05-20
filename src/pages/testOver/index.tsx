@@ -17,7 +17,7 @@ export default function testOver() {
     <div className='testOver'>
       <div className='headNav' >
         <div>
-          <img src={img} className='navImg'/>
+          <img src='http://111.230.5.159:9000/yasi/logo/logo%20(4).png' className='navImg'/>
         </div>
         <Button className='close' onClick={closeTest}>关闭</Button>
       </div>
