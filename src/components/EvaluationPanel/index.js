@@ -130,6 +130,7 @@ const EvaluationPanel = ({
     const [currentPage, setCurrentPage] = useState(1);
     const [currentDetail, setCurrentDetail] = useState(null);
     const [detailVisible, setDetailVisible] = useState(false);
+    const [overflowY, setOverflowY] = useState('auto');
 
 
     const pageSize = 10; // 每页显示的题目数量
@@ -184,10 +185,17 @@ const EvaluationPanel = ({
         }
     ];
 
+    const answerCardRef = useRef(null);
+
+    useEffect(() => {
+        // 页面加载完成后恢复滚动
+        setOverflowY('auto');
+    }, [currentPage]);
+
     const handlePageChange = (page) => {
-        console.log('切换页码:', page);
+        // 点击时临时禁用滚动
+        setOverflowY('0');
         setCurrentPage(page);
-        // 强制触发重新渲染
         setAnswers([...answers]);
     };
 
@@ -248,9 +256,9 @@ const EvaluationPanel = ({
                 <div
                     style={{
                         display: 'flex',
-                        height: 'calc(100vh - 180px)',
+                        height: 'calc(100vh - 340px)',
                         position: 'relative',
-                        height: '520px'
+
                     }}
                 >
                     <div style={{
@@ -292,13 +300,15 @@ const EvaluationPanel = ({
                                             >
                                                 {Array.from({ length: totalPages }).map((_, i) => (
                                                     <div key={i} style={{ padding: '0 8px' }}>
-                                                        <div style={{
-                                                            marginBottom: 16,
-                                                            height: 'calc(100vh - 280px)',
-                                                            overflowY: 'auto',
-                                                            paddingRight: '8px',
-                                                            margin: '0 -8px'
-                                                        }}>
+                                                        <div 
+                                                            ref={answerCardRef}
+                                                            style={{
+                                                                marginBottom: 16,
+                                                                height: 'calc(100vh - 280px)',
+                                                                overflowY: overflowY,
+                                                                paddingRight: '8px',
+                                                                margin: '0 -8px'
+                                                            }}>
                                                             {currentAnswers.map((item, index) => (
                                                                 <Card
                                                                     key={index}

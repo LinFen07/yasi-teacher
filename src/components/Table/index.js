@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Table, Tag, Button, Input, Form } from "antd";
+import { useSelector } from "react-redux";
+import { Table, Tag, Button, Input, Form, AutoComplete } from "antd";
 import "../../components/Table/index.scss"
 const TaskTable = ({
     papers,
@@ -21,30 +22,78 @@ const TaskTable = ({
     const [activeSearchText, setActiveSearchText] = useState('');
     const [activeSearchName, setActiveSearchName] = useState('');
 
-    const handleSearchChange = (e) => {
-        setSearchText(e.target.value);
+    const handlePaperSearchChange = (value) => {
+        const finalValue = typeof value === 'string'
+            ? value
+            : value?.value || value?.target?.value || '';
+        setSearchText(finalValue);
+    };
+
+    const handleStudentSearchChange = (value) => {
+        const finalValue = typeof value === 'string'
+            ? value
+            : value?.value || value?.target?.value || '';
+        setSearchName(finalValue);
     };
 
     const handleSearch = () => {
         setActiveSearchText(searchText);
         setActiveSearchName(searchName);
     };
-
+    // 获取教师分配的数据
+    const { tasks } = useSelector(state => state.tasks);
+    const studentNameList = tasks?.response?.items?.map(item => item.studentName) || [];
     return (
         <>
             <Form>
                 <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <Input
+                    <AutoComplete
                         style={{ width: 200 }}
                         placeholder="输入试卷名称筛选"
                         value={searchText}
-                        onChange={handleSearchChange}
+                        onChange={handlePaperSearchChange}
+                        options={
+                            paperName && paperName.length > 0
+                                ? paperName.map(opt => ({
+                                    value: opt.name,
+                                    label: opt.name
+                                }))
+                                : []
+                        }
+                        filterOption={(inputValue, option) =>
+                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                        }
+                        dropdownStyle={{
+                            zIndex: 9999,
+                            minWidth: 200,
+                            maxHeight: 250,
+                            overflow: 'auto'
+                        }}
+                        defaultActiveFirstOption={false}
                     />
-                    <Input
+                    <AutoComplete
                         style={{ width: 200 }}
                         placeholder="请输入考生姓名"
                         value={searchName}
-                        onChange={e => setSearchName(e.target.value)}
+                        onChange={handleStudentSearchChange}
+                        options={
+                            studentNameList && studentNameList.length > 0
+                                ? studentNameList.map(opt => ({
+                                    value: opt,
+                                    label: opt
+                                }))
+                                : []
+                        }
+                        filterOption={(inputValue, option) =>
+                            option.value.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                        }
+                        dropdownStyle={{
+                            zIndex: 9999,
+                            minWidth: 200,
+                            maxHeight: 250,
+                            overflow: 'auto'
+                        }}
+                        defaultActiveFirstOption={false}
                     />
                     <Button
                         type="primary"
@@ -103,7 +152,15 @@ const TaskTable = ({
                 pagination={{
                     current: pageNow[0],
                     pageSize: 10,
-                    onChange: handleChange,
+                    onChange: (page) => {
+                        handleChange(page);
+                        setTimeout(() => {
+                            window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                            });
+                        }, 100);
+                    },
                 }}
                 dataSource={papers
                     .filter(p =>
