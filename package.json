@@ -1,6 +1,6 @@
 {
   "name": "yas-exam-student",
-  "proxy": "http://120.24.144.113:8668",
+  "proxy": "http://111.230.5.159:8668",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

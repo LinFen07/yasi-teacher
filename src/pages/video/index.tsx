@@ -37,9 +37,9 @@ const IeltsFamiliarisationTest: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    if( type == 'read' || type == 'writte')
+    if( type == 'read' || type == 'writte' || type == 'end')
       setListenCompelete(true);
-    if(type == 'writte')
+    if(type == 'writte'|| type == 'end')
       setReadCompekete(true);
     if(type == 'end')
       setWritteCompelete(true);

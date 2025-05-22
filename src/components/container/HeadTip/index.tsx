@@ -63,7 +63,8 @@ const HeadTip = forwardRef((props: propType) => {
       requestConcurrency(stores.AnswerStore.completedAnswers);
       stores.AnswerStore.clearAnswers(type);
     }else if(type === 'writte'){
-      navigate('/testOver',{ replace: true });
+      // navigate('/testOver',{ replace: true });
+      navigate(`/video?id=${examstore.paperId}&type=end`, { replace: true });
       submitStudentWritteAnswer(examstore.wirrteExam[0].questionItems[0], 0, examstore.correctWritte[0]);
       submitStudentWritteAnswer(examstore.wirrteExam[1].questionItems[0], 1, examstore.correctWritte[1]);
       requestConcurrency(stores.AnswerStore.writingAnswers);

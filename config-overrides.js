@@ -73,21 +73,21 @@ module.exports = override(
   // 拆分 chunks
   splitChunks,
 
-  (config) => {
-    if (process.env.NODE_ENV === 'production') {
-      config.plugins.push(
-        new CompressionWebpackPlugin({
-          test: /\.js$|\.css$/, // 压缩 js 和 css
-          filename: '[path][base].gz', // 输出 .gz 文件
-          algorithm: 'gzip',
-          threshold: 10240,
-          minRatio: 0.8,
-          deleteOriginalAssets: true, // 删除原文件
-        })
-      );
-    }
-    return config;
-  },
+  // (config) => {
+  //   if (process.env.NODE_ENV === 'production') {
+  //     config.plugins.push(
+  //       new CompressionWebpackPlugin({
+  //         test: /\.js$|\.css$/, // 压缩 js 和 css
+  //         filename: '[path][base].gz', // 输出 .gz 文件
+  //         algorithm: 'gzip',
+  //         threshold: 10240,
+  //         minRatio: 0.8,
+  //         deleteOriginalAssets: false, // 删除原文件
+  //       })
+  //     );
+  //   }
+  //   return config;
+  // },
 
   // devServer 配置
   function (config, env) {
