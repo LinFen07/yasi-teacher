@@ -46,6 +46,7 @@ export type StudentAnswer = {
   studentId: number,
   score: string,
   questionType: string,
+  questionOrder: number,
 }
 
 export type Correct = {

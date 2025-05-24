@@ -1,7 +1,7 @@
 
 import stores from '@/stores';
 import type { Exam, ExamType } from '@/typings/exam';
-import { autorun, runInAction } from 'mobx';
+import { autorun, runInAction, set } from 'mobx';
 import  {computedPrevCount}  from '@/utils/computed';
 import { submitStudentBlankAnswer } from './submitAnswer';
 export function createInput(exam: Array<Exam>, type: string, container: any) {
@@ -41,6 +41,7 @@ export function createInput(exam: Array<Exam>, type: string, container: any) {
 
 export function MyInput(index: number, span: any, prevCount: number, questionArr: ExamType) {
   // console.log('createInput', index, span, prevCount, questionArr);
+  const fragment = document.createDocumentFragment();
   let len = index + questionArr.items.length;
   for (let i = index; i < len; i++) {
     const wrapper = document.createElement('div');
@@ -82,6 +83,7 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
 
     wrapper.appendChild(placeholder);
     wrapper.appendChild(input);
+    
 
     span[i].innerHTML = '';
     span[i].appendChild(wrapper);

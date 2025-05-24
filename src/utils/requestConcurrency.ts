@@ -1,4 +1,4 @@
-import { submitAnswer, submitAnswerBatch } from '@/api/studentAnswer';
+import { submitAnswerBatch } from '@/api/studentAnswer';
 import { StudentAnswer } from '@/typings/exam';
 
 function cacheFailedRequests(requests: StudentAnswer[]) {
@@ -31,13 +31,6 @@ function retryWithBackoff(fn: Function, retries = 3): Promise<any> {
 
 export function requestConcurrency(data: StudentAnswer[]) {
 
-  // try {
-  //   return submitAnswerBatch(data)
-  // }
-  // catch (error) {
-  //   console.log(error)
-  // }
-
   return new Promise((resolve, reject) => {
     // 初始网络检查
     if (!navigator.onLine) {
@@ -57,15 +50,15 @@ export function requestConcurrency(data: StudentAnswer[]) {
         return reject(new Error('网络中断，未完成请求已缓存'));
       }
 
-      const currentItem = queue.shift()!;
-      retryWithBackoff(() => submitAnswer(currentItem), 3) // 使用重试机制
+      const currentItem = queue.splice(0, 5)!;
+      retryWithBackoff(() => submitAnswerBatch(currentItem), 3) // 使用重试机制
         .then((res) => {
           results.push(res);
           processNext();
         })
         .catch((error) => {
           if (error.isNetworkError) {
-            cacheFailedRequests([currentItem, ...queue]);
+            cacheFailedRequests([...currentItem, ...queue]);
             reject(new Error('网络错误，请求已缓存'));
           } else {
             reject(new Error(`提交失败: ${error.message}`));
