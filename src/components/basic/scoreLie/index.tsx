@@ -1,9 +1,9 @@
-import * as echarts from 'echarts';
+import echarts from '@/utils/echarts';
 import { useEffect } from 'react';
 
 import './index.scss';
 
-type EChartsOption = echarts.EChartsOption;
+type EChartsOption = any;
 
 export default function ScoreLie(){
 

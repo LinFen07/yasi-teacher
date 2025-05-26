@@ -91,7 +91,7 @@ const Dashboard = () => {
               </Button>
               <Button 
                 type="primary" 
-                disabled={!getTime(item.endTime)} 
+                // disabled={!getTime(item.endTime)} 
                 style={{marginLeft: '12px'}} 
                 onClick={() => handleSreachTestResult(item.examPaperId, item.isAppraise, item.appraise)} >
                 查看结果
