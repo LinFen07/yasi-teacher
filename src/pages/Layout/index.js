@@ -27,7 +27,7 @@ const items = [
     //     icon: <HomeOutlined />,
     // },
     {
-        label: '作文评阅',
+        label: '试卷评阅',
         key: '/app/evaluation',
         icon: <EditOutlined />,
     },
@@ -89,9 +89,9 @@ const GeekLayout = () => {
                 }}
             >
                 <div className="logo">
-                    <img src="http://120.24.144.113:8002/static/img/logo.d99ccfc3.png" alt="logo" style={{ height: '40px' }} />
+                    <img src="http://111.230.5.159:9000/yasi/image/logo/logo-07-3.png" alt="logo" style={{ height: '50px', paddingLeft: '0' }} />
                     {!collapsed && (
-                        <div style={{ color: '#fff', fontSize: '14px', marginTop: '10px' }}>模考教师阅卷系统</div>
+                        <div style={{ color: '#fff', fontSize: '14px', marginTop: '8px' }}>模考教师阅卷系统</div>
                     )}
                 </div>
 
