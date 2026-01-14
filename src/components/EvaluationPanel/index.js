@@ -8,7 +8,6 @@ import { Form, Card, Button, Table, Carousel, Tag, Spin, Drawer } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import { useDispatch } from 'react-redux';
 import { getStudentsAnswers, getOriginalTitel } from '../../store/tasks';
-import { putAppraise } from '../../utils/appraise';
 
 // 转换HTML内容为纯文本
 const convertHtmlToText = (html) => {
@@ -36,10 +35,24 @@ const EvaluationPanel = ({
     const [answers, setAnswers] = useState(initialAnswers);
     const [loading, setLoading] = useState(false);
     const dispatch = useDispatch();
-    const disnavigate = useNavigate();
+    const navigate = useNavigate(); // 修正变量名：disnavigate → navigate
 
     const [isFetching, setIsFetching] = useState(false);
 
+    // 修复：编辑模式下回显原评价内容
+    useEffect(() => {
+        if (isEditingMode && paperData?.studentsInfo?.appraise) {
+            setEditorContent(paperData.studentsInfo.appraise);
+            // 同步到表单字段，确保校验通过
+            form.setFieldsValue({ comment: paperData.studentsInfo.appraise });
+        } else if (!isEditingMode) {
+            // 非编辑模式清空编辑器
+            setEditorContent('');
+            form.setFieldsValue({ comment: '' });
+        }
+    }, [isEditingMode, paperData?.studentsInfo?.appraise, form, setEditorContent]);
+
+    // 获取学生答题数据
     useEffect(() => {
         if (!paperData?.studentId || !paperData?.paperId || isFetching) {
             return;
@@ -55,10 +68,7 @@ const EvaluationPanel = ({
                 };
 
                 const response = await dispatch(getStudentsAnswers(studentsInfo));
-                // console.log('API响应:', response);
-
-                if (!response) {
-                    // console.error('无效的API响应格式:', response);
+                if (!response || !Array.isArray(response)) {
                     setAnswers([]);
                     return;
                 }
@@ -94,7 +104,7 @@ const EvaluationPanel = ({
                                 items: detailResponse.items || []
                             };
                         } catch (err) {
-                            // console.error(`获取题目详情失败:`, err);
+                            console.error(`获取题目详情失败:`, err);
                             return {
                                 id: group.questionId,
                                 studentAnswer: group.answers.join(' / '),
@@ -108,8 +118,9 @@ const EvaluationPanel = ({
                 );
                 setAnswers(answersWithDetails);
             } catch (error) {
-                // console.error('获取学生答案失败:', error);
+                console.error('获取学生答案失败:', error);
                 setAnswers([]);
+                message.error('获取答题数据失败');
             } finally {
                 setLoading(false);
                 setIsFetching(false);
@@ -119,22 +130,51 @@ const EvaluationPanel = ({
         fetchAnswers();
     }, [dispatch, paperData?.studentId, paperData?.paperId]);
 
-    // 添加mount日志
+    // 组件挂载/卸载日志
     useEffect(() => {
         console.log('EvaluationPanel组件已挂载');
         return () => {
             console.log('EvaluationPanel组件即将卸载');
         };
     }, []);
-    // console.log(paperData)
+
+    // 分页逻辑优化
     const [currentPage, setCurrentPage] = useState(1);
     const [currentDetail, setCurrentDetail] = useState(null);
     const [detailVisible, setDetailVisible] = useState(false);
     const [overflowY, setOverflowY] = useState('auto');
-
-
     const pageSize = 10; // 每页显示的题目数量
 
+    // 修复：分页数据计算（避免Carousel和手动分页冲突）
+    const totalPages = Math.max(Math.ceil(answers.length / pageSize), 1);
+    const safePage = Math.min(Math.max(currentPage, 1), totalPages);
+    const currentAnswers = answers.slice(
+        (safePage - 1) * pageSize,
+        safePage * pageSize
+    );
+
+    // 修复：分页切换逻辑（统一手动分页，移除Carousel的自动切换）
+    const handlePageChange = (page) => {
+        setOverflowY('hidden');
+        setTimeout(() => {
+            setCurrentPage(page);
+            setOverflowY('auto');
+        }, 300);
+    };
+
+    // 修复：移除重复的提交逻辑，统一由onSubmit处理
+    const handleDetailClose = () => {
+        setDetailVisible(false);
+    };
+
+    // 修复：编辑器内容和表单字段双向绑定
+    const handleEditorChange = (content) => {
+        setEditorContent(content);
+        // 同步到表单字段，确保提交时能拿到值
+        form.setFieldsValue({ comment: content });
+    };
+
+    // 表格列配置
     const columns = [
         {
             title: '题号',
@@ -187,61 +227,8 @@ const EvaluationPanel = ({
 
     const answerCardRef = useRef(null);
 
-    useEffect(() => {
-        // 页面加载完成后恢复滚动
-        setOverflowY('auto');
-    }, [currentPage]);
-
-    const handlePageChange = (page) => {
-        // 点击时临时禁用滚动
-        setOverflowY('0');
-        setCurrentPage(page);
-        setAnswers([...answers]);
-    };
-
-    // 优化分页逻辑
-    const totalPages = Math.max(Math.ceil(answers.length / pageSize), 1);
-    const safePage = Math.min(Math.max(currentPage, 1), totalPages);
-    const currentAnswers = answers.slice(
-        (safePage - 1) * pageSize,
-        safePage * pageSize
-    );
-    const handleDetailClose = async (values) => {
-        try {
-            const tasks = JSON.parse(localStorage.getItem('tasks'));
-            const examPaperId = tasks?.response?.items?.[0]?.examPaperId;
-            if (!examPaperId) {
-                message.error('无法获取试卷ID');
-                return;
-            }
-
-            // 保存编辑器内容
-            const commentContent = editorContent;
-
-            await dispatch(putAppraise(values.comment, examPaperId));
-            message.success('评价提交成功');
-
-            // 提交完成后手动调用onSubmit
-            onSubmit();
-
-            // 保留编辑器内容
-            setEditorContent('');
-        } catch (error) {
-            console.error('提交失败:', error);
-            message.error('评价提交失败');
-        }
-
-    }
-    // console.log('当前页码:', safePage, '总页数:', totalPages, '当前页数据:', currentAnswers);
-    // console.log(111, paperData)
-    console.log('Rendering EvaluationPanel:', {
-        loading,
-        answersCount: answers.length,
-        isEditingMode
-    });
-
     return (
-        <Form form={form} onFinish={onSubmit}>
+        <Form form={form} onFinish={onSubmit} layout="vertical">
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -250,17 +237,16 @@ const EvaluationPanel = ({
                 width: '100%',
                 maxWidth: '1200px',
                 margin: '0 auto',
-                overflowX: 'hidden',
-                border: '1px solid rgb(232, 215, 215)' // 调试用边框
+                overflowX: 'hidden'
             }}>
                 <div
                     style={{
                         display: 'flex',
                         height: 'calc(100vh - 340px)',
                         position: 'relative',
-
                     }}
                 >
+                    {/* 左侧：答题情况 */}
                     <div style={{
                         width: '480px',
                         height: '520px',
@@ -282,119 +268,78 @@ const EvaluationPanel = ({
                         >
                             <Spin spinning={loading} tip="数据加载中..." size="large">
                                 {answers.length > 0 ? (
-                                    !isEditingMode ? (
-                                        <>
-                                            <Carousel
-                                                dots={false}
-                                                afterChange={(current) => handlePageChange(current + 1)}
-                                                style={{ flex: 1 }}
-                                                easing="ease-in-out"
-                                                draggable
-                                                swipe
-                                                touchMove
-                                                swipeToSlide
-                                                speed={500}
-                                                waitForAnimate
-                                                infinite={false}
-                                                adaptiveHeight
-                                            >
-                                                {Array.from({ length: totalPages }).map((_, i) => (
-                                                    <div key={i} style={{ padding: '0 8px' }}>
-                                                        <div 
-                                                            ref={answerCardRef}
-                                                            style={{
-                                                                marginBottom: 16,
-                                                                height: 'calc(100vh - 280px)',
-                                                                overflowY: overflowY,
-                                                                paddingRight: '8px',
-                                                                margin: '0 -8px'
-                                                            }}>
-                                                            {currentAnswers.map((item, index) => (
-                                                                <Card
-                                                                    key={index}
-                                                                    style={{ marginBottom: 8 }}
-                                                                    title={`题号: ${item.id || '无'}`}
-                                                                    extra={
-                                                                        <Button
-                                                                            type="link"
-                                                                            onClick={() => {
-                                                                                setCurrentDetail(item);
-                                                                                setDetailVisible(true);
-                                                                            }}
-                                                                        >
-                                                                            详情
-                                                                        </Button>
-                                                                    }
-                                                                >
-                                                                    <p><strong>学生答案：</strong> {item.studentAnswer ? (item.studentAnswer.length > 30 ? `${item.studentAnswer.substring(0, 30)}...` : item.studentAnswer) : '无'}</p>
-                                                                    <p><strong>正确答案：</strong> {convertHtmlToText(item.correctAnswer) || '无'}</p>
-                                                                    <p>
-                                                                        <strong>状态：</strong>
-                                                                        {item.isCorrect === 2 ? (
-                                                                            <Tag color="blue">作文</Tag>
-                                                                        ) : item.isCorrect === undefined ? (
-                                                                            <Tag color="gray">未评阅</Tag>
-                                                                        ) : (
-                                                                            <Tag color={item.isCorrect === 1 ? 'green' : 'red'}>
-                                                                                {item.isCorrect === 1 ? '正确' : '错误'}
-                                                                            </Tag>
-                                                                        )}
-                                                                    </p>
-                                                                    <p><strong>得分：</strong> {item.score || '0'}</p>
-                                                                </Card>
-                                                            ))}
-                                                        </div>
-                                                        {/* <div style={{
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between',
-                                                            alignItems: 'center',
-                                                            marginTop: 16
-                                                        }}>
-                                                            <Button
-                                                                disabled={currentPage <= 1}
-                                                                onClick={() => setCurrentPage(currentPage - 1)}
-                                                            >
-                                                                上一页
-                                                            </Button>
-                                                            <span>第 {currentPage} 页 / 共 {totalPages} 页</span>
-                                                            <Button
-                                                                disabled={currentPage >= totalPages}
-                                                                onClick={() => setCurrentPage(currentPage + 1)}
-                                                            >
-                                                                下一页
-                                                            </Button>
-                                                        </div> */}
-                                                    </div>
-                                                ))}
-                                            </Carousel>
-                                            <div style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                marginTop: 16,
-                                                padding: '12px 0',
-                                                borderTop: '1px solid #f0f0f0',
-                                                position: 'sticky',
-                                                bottom: 0,
-                                                background: '#fff',
-                                                zIndex: 1
+                                    <div style={{ flex: 1 }}>
+                                        <div
+                                            ref={answerCardRef}
+                                            style={{
+                                                marginBottom: 16,
+                                                height: 'calc(100vh - 280px)',
+                                                overflowY: overflowY,
+                                                paddingRight: '8px'
                                             }}>
-                                                <Button
-                                                    disabled={currentPage <= 1}
-                                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                            {currentAnswers.map((item, index) => (
+                                                <Card
+                                                    key={index}
+                                                    style={{ marginBottom: 8 }}
+                                                    title={`题号: ${item.id || '无'}`}
+                                                    extra={
+                                                        <Button
+                                                            type="link"
+                                                            onClick={() => {
+                                                                setCurrentDetail(item);
+                                                                setDetailVisible(true);
+                                                            }}
+                                                        >
+                                                            详情
+                                                        </Button>
+                                                    }
                                                 >
-                                                    上一页
-                                                </Button>
-                                                <span>第 {currentPage} 页 / 共 {totalPages} 页</span>
-                                                <Button
-                                                    disabled={currentPage >= totalPages}
-                                                    onClick={() => setCurrentPage(currentPage + 1)}
-                                                >
-                                                    下一页
-                                                </Button>
-                                            </div>
-                                        </>
-                                    ) : null
+                                                    <p><strong>学生答案：</strong> {item.studentAnswer ? (item.studentAnswer.length > 30 ? `${item.studentAnswer.substring(0, 30)}...` : item.studentAnswer) : '无'}</p>
+                                                    <p><strong>正确答案：</strong> {convertHtmlToText(item.correctAnswer) || '无'}</p>
+                                                    <p>
+                                                        <strong>状态：</strong>
+                                                        {item.isCorrect === 2 ? (
+                                                            <Tag color="blue">作文</Tag>
+                                                        ) : item.isCorrect === undefined ? (
+                                                            <Tag color="gray">未评阅</Tag>
+                                                        ) : (
+                                                            <Tag color={item.isCorrect === 1 ? 'green' : 'red'}>
+                                                                {item.isCorrect === 1 ? '正确' : '错误'}
+                                                            </Tag>
+                                                        )}
+                                                    </p>
+                                                    <p><strong>得分：</strong> {item.score || '0'}</p>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                        {/* 手动分页控件（移除Carousel，避免冲突） */}
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            marginTop: 16,
+                                            padding: '12px 0',
+                                            borderTop: '1px solid #f0f0f0',
+                                            position: 'sticky',
+                                            bottom: 0,
+                                            background: '#fff',
+                                            zIndex: 1
+                                        }}>
+                                            <Button
+                                                disabled={currentPage <= 1}
+                                                onClick={() => handlePageChange(currentPage - 1)}
+                                            >
+                                                上一页
+                                            </Button>
+                                            <span>第 {currentPage} 页 / 共 {totalPages} 页</span>
+                                            <Button
+                                                disabled={currentPage >= totalPages}
+                                                onClick={() => handlePageChange(currentPage + 1)}
+                                            >
+                                                下一页
+                                            </Button>
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div style={{
                                         height: '100%',
@@ -417,120 +362,116 @@ const EvaluationPanel = ({
                                         )}
                                     </div>
                                 )}
-                                {console.log('Empty state rendered:', !loading && answers.length === 0)}
                             </Spin>
                         </Card>
                     </div>
 
                     {/* 右侧：评价编辑器 */}
                     <div style={{
-                        width: isEditingMode ? '720px' : '100%',
+                        flex: 1, // 修复宽度：自适应剩余空间，替代固定宽度
                         height: '520px',
                         paddingLeft: '8px',
                         overflow: 'hidden',
                         flexShrink: 0
                     }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
-                            {/* <Card title="评价预览" style={{ flex: 1 }}>
+                        <Card title={isEditingMode ? "修改评价" : "撰写评价"} style={{
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}>
+                            {/* 原评价展示 */}
+                            <div style={{ marginBottom: 16 }}>
+                                <strong>原评价：</strong>
                                 <div
-                                    className="ql-editor"
-                                    style={{
-                                        height: '100%',
-                                        overflow: 'auto',
-                                        background: '#fff',
-                                        padding: '16px'
-                                    }}
                                     dangerouslySetInnerHTML={{
-                                        __html: editorContent || '<p style="color:#999; text-align:center; margin-top:120px">请在右侧编辑评价内容</p>'
+                                        __html: paperData?.studentsInfo?.appraise || '<span style="color:#999">未评价</span>'
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        marginTop: 8,
+                                        padding: '12px',
+                                        border: '1px solid #f0f0f0',
+                                        borderRadius: '4px',
+                                        backgroundColor: '#fafafa',
+                                        minHeight: '32px',
+                                        maxHeight: '150px',
+                                        overflowY: 'auto',
+                                        lineHeight: 1.6,
+                                        fontSize: '14px'
                                     }}
                                 />
-                            </Card> */}
-                            <Card title={isEditingMode ? "修改评价" : "撰写评价"} style={{
-                                flex: 1,
-                                maxWidth: '800px',
-                                margin: '0 ',
-                                width: '60%'
+                            </div>
+
+                            {/* 修复：表单字段和编辑器双向绑定 */}
+                            <Form.Item
+                                name="comment"
+                                label=""
+                                rules={[
+                                    {
+                                        required: !isEditingMode, // 编辑模式允许为空
+                                        message: '请输入评价内容'
+                                    }
+                                ]}
+                            >
+                                <CustomReactQuill
+                                    theme="snow"
+                                    value={editorContent || ''} // 兜底空字符串，避免undefined
+                                    onChange={handleEditorChange} // 绑定自定义change事件，同步表单字段
+                                    modules={{
+                                        toolbar: {
+                                            container: [
+                                                [{ 'header': [1, 2, false] }],
+                                                ['bold', 'italic', 'underline', 'strike'],
+                                                [{ 'color': [] }, { 'background': [] }],
+                                                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                                ['link'], // 移除image，避免上传问题
+                                                ['clean']
+                                            ]
+                                        },
+                                        clipboard: {
+                                            matchVisual: false
+                                        }
+                                    }}
+                                    placeholder="请输入对试卷整体的评价..."
+                                    style={{
+                                        height: '280px', // 优化高度
+                                        width: '100%',
+                                        borderRadius: '6px',
+                                        background: '#fff'
+                                    }}
+                                />
+                            </Form.Item>
+
+                            {/* 修复：恢复提交/取消按钮，确保能触发表单提交 */}
+                            {/* <div style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                gap: '16px',
+                                marginTop: 'auto', // 固定在编辑器底部
+                                paddingTop: '16px',
+                                borderTop: '1px solid #f0f0f0'
                             }}>
-                                <div style={{ marginBottom: 8 }}>
-                                    <strong>原评价：</strong>
-                                    <div
-                                        dangerouslySetInnerHTML={{
-                                            __html: paperData?.studentsInfo?.appraise || '<span style="color:#999">未评价</span>'
-                                        }}
-                                        style={{
-                                            width: '100%',
-                                            marginTop: 8,
-                                            padding: '12px',
-                                            border: '1px solid #f0f0f0',
-                                            borderRadius: '4px',
-                                            backgroundColor: '#fafafa',
-                                            minHeight: '32px',
-                                            maxHeight: '150px',
-                                            overflowY: 'auto',
-                                            lineHeight: 1.6,
-                                            fontSize: '14px'
-                                        }}
-                                    />
-                                </div>
-                                <Form.Item
-                                    name="comment"
-                                    label=""
-                                    rules={[{ required: true, message: '请输入评价内容' }]}
+                                <Button onClick={onCancel}>取消</Button>
+                                <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    loading={loading}
                                 >
-                                    <CustomReactQuill
-                                        theme="snow"
-                                        value={editorContent}
-                                        onChange={setEditorContent}
-                                        modules={{
-                                            toolbar: {
-                                                container: [
-                                                    [{ 'header': [1, 2, false] }],
-                                                    ['bold', 'italic', 'underline', 'strike'],
-                                                    [{ 'color': [] }, { 'background': [] }],
-                                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                                                    ['link', 'image'],
-                                                    ['clean']
-                                                ]
-                                            },
-                                            clipboard: {
-                                                matchVisual: false
-                                            }
-                                        }}
-                                        placeholder="请输入对试卷整体的评价..."
-                                        style={{
-                                            height: '250px',
-                                            width: '100%',
-                                            borderRadius: '6px',
-                                            background: '#fff',
-                                            display: 'flex',
-                                            flexDirection: 'column'
-                                        }}
-                                    />
-                                </Form.Item>
-                            </Card>
-                        </div>
+                                    {isEditingMode ? '保存修改' : '提交评价'}
+                                </Button>
+                            </div> */}
+                        </Card>
                     </div>
                 </div>
-
-                {/* 操作按钮
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
-                    <Button onClick={onCancel}>取消</Button>
-                    <Button
-                        type="primary"
-                        htmlType="submit"
-                    // onsubmit={() => setViewMode('list')}
-                    // onClick={() => handleDetailClose()}
-                    >
-                        {isEditingMode ? '保存修改' : '提交评价'}
-                    </Button>
-                </div> */}
             </div>
+
+            {/* 题目详情抽屉 */}
             {currentDetail && (
                 <Drawer
                     title={`题目详情 - 题号: ${currentDetail.id}`}
                     width={720}
                     visible={detailVisible}
-                    onClose={() => setDetailVisible(false)}
+                    onClose={handleDetailClose}
                     bodyStyle={{ paddingBottom: 80 }}
                 >
                     <div style={{ marginBottom: 24 }}>
@@ -564,7 +505,7 @@ const EvaluationPanel = ({
                             />
                         </div>
                     </div>
-                    {currentDetail.items && (
+                    {currentDetail.items && currentDetail.items.length > 0 && (
                         <div style={{ marginTop: 24 }}>
                             <h4>题目选项</h4>
                             <div style={{
@@ -596,6 +537,7 @@ const EvaluationPanel = ({
     );
 };
 
+// 修复PropTypes：补充setViewMode的类型定义
 EvaluationPanel.propTypes = {
     form: PropTypes.object.isRequired,
     editorContent: PropTypes.string,
@@ -604,7 +546,16 @@ EvaluationPanel.propTypes = {
     onCancel: PropTypes.func.isRequired,
     isEditingMode: PropTypes.bool,
     paperData: PropTypes.object,
-    answers: PropTypes.array
+    answers: PropTypes.array,
+    setViewMode: PropTypes.func
+};
+
+// 设置默认props，避免undefined
+EvaluationPanel.defaultProps = {
+    isEditingMode: false,
+    paperData: {},
+    answers: [],
+    setViewMode: () => { }
 };
 
 export default EvaluationPanel;

@@ -1,81 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import { Form, Input, Card, Button } from 'antd';
 import ScoreInput from '../ScoreInput';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { getOriginalTitel } from '../../store/tasks';
-import { useEffect } from 'react';
+
 const { TextArea } = Input;
 
-const convertToText = (html) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    return doc.documentElement.textContent;
+const stripHtmlTags = (html) => {
+    if (!html) return '无标题';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || '';
 };
 
 const ScoringPanel = ({
     form,
-    editorContent,
-    setEditorContent,
     onSubmit,
-    onCancel,
     isEditingMode,
     paperData,
+    // 仅保留实际使用的 props，其他兼容 props 可通过 defaultProps 处理
 }) => {
-    // const { paper = [], article = {} } = useSelector(state => state.tasks);
-    const [count, setCount] = useState(1)
+    const [count, setCount] = useState(1);
     const [essayTitle, setEssayTitle] = useState('');
-    const dispatch = useDispatch()
-    // const items = article?.response?.items || [];
-    const studentAnswer_1 = paperData?.composition[0]?.studentAnswer ? paperData.composition[0].studentAnswer : '暂无'
-    const studentAnswer_2 = paperData?.composition[1]?.studentAnswer ? paperData.composition[1].studentAnswer : '暂无'
-    const studentAnswer = count === 1 ? studentAnswer_1 : studentAnswer_2
-    const score_1 = paperData?.composition[0]?.score ? paperData.composition[0].score : '未评分'
-    const score_2 = paperData?.composition[1]?.score ? paperData.composition[1].score : '未评分'
-    const score = count === 1 ? score_1 : score_2
+    const dispatch = useDispatch();
+
+    // 防御性处理作文数量
+    const compositionCount = Array.isArray(paperData?.composition)
+        ? paperData.composition.length
+        : 0;
+
+    // 当前作文数据
+    const currentEssay = paperData?.composition?.[count - 1] || {};
+    const studentAnswer = currentEssay.studentAnswer || '暂无';
+
+    // 核心修复：处理评分值的类型转换
+    const rawScore = currentEssay.score;
+    // 1. 供 ScoreInput 使用的数字值（满足 propTypes）
+    const scoreValue = !isNaN(Number(rawScore)) ? Number(rawScore) : 0;
+    // 2. 供显示的文本（数字/未评分）
+    const scoreDisplayText = !isNaN(Number(rawScore)) ? Number(rawScore) : '未评分';
+
+    // 获取作文标题
+    const fetchTitle = useCallback(async () => {
+        if (!currentEssay?.questionId) {
+            setEssayTitle('无标题');
+            return;
+        }
+        try {
+            const titleRes = await dispatch(getOriginalTitel(currentEssay.questionId));
+            setEssayTitle(titleRes?.title || titleRes?.content || '无标题');
+        } catch (error) {
+            console.error('获取作文标题失败:', error);
+            setEssayTitle('无标题');
+        }
+    }, [dispatch, currentEssay.questionId]);
+
     useEffect(() => {
-        const fetchTitle = async () => {
-            if (!paperData?.composition || paperData.composition.length < count) {
-                setEssayTitle('');
-                return;
-            }
-
-            const question = count === 1 ? paperData.composition[0] : paperData.composition[1];
-            if (!question?.questionId) {
-                setEssayTitle('');
-                return;
-            }
-
-            try {
-                const title = await dispatch(getOriginalTitel(question.questionId));
-                setEssayTitle(title);
-            } catch (error) {
-                console.error('获取作文标题失败:', error);
-                setEssayTitle('');
-            }
-        };
-
         fetchTitle();
-    }, [dispatch, count, paperData]);
-    // console.log(essayTitle)
+    }, [fetchTitle, count]);
+
+    // 安全切换作文
+    const handleSwitchEssay = (newCount) => {
+        if (newCount < 1 || newCount > compositionCount) return;
+        setCount(newCount);
+    };
+
     return (
         <div style={{ display: 'flex', height: '100%', gap: '16px' }}>
-            {/* 左侧：作文内容 */}
-            <Card
-                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-            >
+            {/* 左侧作文内容 */}
+            <Card style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <div style={{ marginBottom: 16 }}>
                     <h3 style={{ marginBottom: 8 }}>作文标题</h3>
-                    {(!paperData || !paperData.composition || paperData.composition.length === 0) ? (
+                    {compositionCount === 0 ? (
                         <div style={{ textAlign: 'center', padding: 24, fontSize: 16 }}>考生未答题</div>
                     ) : (
                         <>
                             <div
-                                dangerouslySetInnerHTML={{
-                                    __html: essayTitle?.title || essayTitle?.content || '无标题'
-                                }}
                                 style={{
                                     border: '1px solid #f0f0f0',
                                     padding: 16,
@@ -83,33 +84,35 @@ const ScoringPanel = ({
                                     background: '#fff',
                                     marginBottom: 16
                                 }}
-                            />
+                            >
+                                {stripHtmlTags(essayTitle)}
+                            </div>
                             <h3 style={{ marginBottom: 8 }}>作文内容</h3>
                             <TextArea
-                                value={convertToText(studentAnswer) || ''}
+                                value={stripHtmlTags(studentAnswer) || ''}
                                 readOnly
                                 style={{ flex: 1, width: '100%', height: '190px', resize: 'none', marginBottom: 20 }}
                             />
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                                <Button
+                                    onClick={() => handleSwitchEssay(1)}
+                                    disabled={count === 1 || compositionCount < 1}
+                                >
+                                    上一篇
+                                </Button>
+                                <Button
+                                    onClick={() => handleSwitchEssay(2)}
+                                    disabled={count === 2 || compositionCount < 2}
+                                >
+                                    下一篇
+                                </Button>
+                            </div>
                         </>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-                        <Button
-                            onClick={() => setCount(1)}
-                            disabled={count === 1}
-                        >
-                            上一篇
-                        </Button>
-                        <Button
-                            onClick={() => setCount(2)}
-                            disabled={count === 2}
-                        >
-                            下一篇
-                        </Button>
-                    </div>
                 </div>
             </Card>
 
-            {/* 右侧：合并后的信息与评分区域 */}
+            {/* 右侧评分区域 */}
             <div style={{ width: '300px' }}>
                 <Card title="考生信息与评分">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -117,9 +120,10 @@ const ScoringPanel = ({
                             <div><strong>姓名：</strong>{paperData?.studentName || '未知'}</div>
                             <div style={{ marginBottom: 8 }}>
                                 <strong>原评分：</strong>
+                                {/* 修复核心：value 传数字 scoreValue，placeholder 显示文本 */}
                                 <ScoreInput
-                                    value={score}
-                                    readOnly
+                                    value={scoreValue}
+                                    placeholder={scoreDisplayText}
                                     disabled
                                     style={{
                                         width: '100%',
@@ -138,7 +142,7 @@ const ScoringPanel = ({
                                     label="评分"
                                     rules={[
                                         { required: true, message: '请输入评分' },
-                                        { type: 'number', message: '评分必须为数字' }
+                                        { type: 'number', min: 0, max: 100, message: '评分必须为0-100的数字' }
                                     ]}
                                 >
                                     <ScoreInput style={{ width: '100%' }} />
@@ -150,42 +154,42 @@ const ScoringPanel = ({
                                     label="评分"
                                     rules={[
                                         { required: true, message: '请输入评分' },
-                                        { type: 'number', message: '评分必须为数字' }
+                                        { type: 'number', min: 0, max: 100, message: '评分必须为0-100的数字' }
                                     ]}
                                 >
                                     <ScoreInput style={{ width: '100%' }} />
                                 </Form.Item>
                             )}
-                            {/* <div style={{ marginBottom: '16px' }}>
-                                <h3 style={{ marginBottom: '8px' }}>作文评价</h3>
-                                <TextArea rows={4} placeholder="请输入对作文的评价" />
-                            </div> */}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
-                                {/* <Button onClick={onCancel}>返回</Button> */}
+                            <div style={{ marginTop: '16px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '100%' }}>   {isEditingMode ? '保存修改' : '提交评价'}</Button>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        style={{ width: '100%' }}
+                                    >
+                                        {isEditingMode ? '保存修改' : '提交评价'}
+                                    </Button>
                                 </Form.Item>
                             </div>
                         </Form>
                     </div>
                 </Card>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 
+// 精简后的 PropTypes
 ScoringPanel.propTypes = {
     form: PropTypes.object.isRequired,
-    editorContent: PropTypes.string,
-    setEditorContent: PropTypes.func.isRequired,
     onSubmit: PropTypes.func.isRequired,
-    onCancel: PropTypes.func.isRequired,
     isEditingMode: PropTypes.bool,
-    paperData: PropTypes.object,
-    onPrevious: PropTypes.func.isRequired,
-    onNext: PropTypes.func.isRequired,
-    hasPrevious: PropTypes.bool,
-    hasNext: PropTypes.bool
+    paperData: PropTypes.object
+};
+
+ScoringPanel.defaultProps = {
+    isEditingMode: false,
+    paperData: {}
 };
 
 export default ScoringPanel;

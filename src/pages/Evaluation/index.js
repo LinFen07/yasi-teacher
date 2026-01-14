@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getComposition, getConfrim, getStudentsAnswers, getStudentsInfo, getTask, selectNameById } from "../../store/tasks";
 import 'react-quill/dist/quill.snow.css';
 import { useNavigate } from "react-router-dom";
-import { Table, Button, Tag, Card, Spin, Select, Statistic, Breadcrumb, Form } from "antd";
+import { Table, Button, Tag, Card, Spin, Select, Statistic, Breadcrumb, Form, message } from "antd"; // 新增message
 import { LeftOutlined } from '@ant-design/icons';
 import ScoringPanel from "../../components/ScoringPanel";
 import EvaluationPanel from "../../components/EvaluationPanel";
@@ -80,27 +80,31 @@ const Evaluation = () => {
           // 处理可能为空的composition
           const selectId = composition?.length >= 2
             ? [composition[0]?.id, composition[1]?.id].filter(Boolean)
-            : [];
+            : composition?.length === 1
+              ? [composition[0]?.id]
+              : [];
 
           const paperId = studentsInfo?.paperId;
           const studentName = taskItem?.studentName;
           const selectedPaperName = taskItem?.examName;
 
           // 安全计算status
-          const status = composition?.length >= 2
-            ? (composition[0]?.score !== 0 &&
-              composition[1]?.score !== 0 &&
-              studentsInfo?.appraise !== "undefined" &&
-              studentsInfo?.appraise != null
-              ? '已阅' : '未阅')
-            : '未阅';
+          const hasScore1 = composition?.[0]?.score && composition[0].score !== 0;
+          const hasScore2 = composition?.[1]?.score && composition[1].score !== 0;
+          const hasAppraise = studentsInfo?.appraise && studentsInfo.appraise !== "undefined" && studentsInfo.appraise !== null;
+          // 根据实际作文数量判断状态
+          const status = composition?.length === 1
+            ? (hasScore1 && hasAppraise ? '已阅' : '未阅')
+            : composition?.length === 2
+              ? (hasScore1 && hasScore2 && hasAppraise ? '已阅' : '未阅')
+              : '未阅';
 
           newPapers.push({
             studentsInfo: studentsInfo,
             paperId: paperId,
             studentName: studentName,
             studentId: studentsInfo.studentId,
-            composition: composition,
+            composition: composition || [], // 兜底为空数组
             id: selectId,
             paperName: selectedPaperName,
             status: status,
@@ -119,136 +123,120 @@ const Evaluation = () => {
     processItemsSequentially();
   }, [dispatch, tasks, pageState, refreshFlag]);
 
-  // 处理批阅提交
+  // 修复后的批阅提交逻辑（完整可运行）
   const handleGradeSubmit = async (values) => {
+    // 1. 前置校验：必填项检查 + 数据存在性检查
+    if (!currentPaper) {
+      message.error('当前无选中的试卷，无法提交');
+      return;
+    }
+    // 提取关键参数，确保编辑模式参数正确传递
+    const { score1, score2, comment, isEditingMode = false } = values;
+    if (!isEditingMode && !comment) {
+      message.warning('评价内容不能为空');
+      return;
+    }
+
     setGradeLoading(true);
     try {
-      let score1 = undefined;
-      let score2 = undefined;
-      let appraise = undefined;
-      let updatedPapers;
-      score1 = values.score1 || form.getFieldValue('score1');
-      score2 = values.score2 || form.getFieldValue('score2');
-      appraise = values.comment;
-      form.setFieldsValue({
-        score1: '',
-        score2: ''
-      });
-      updatedPapers = papers.map(p => {
-        if (p.id === currentPaper.id && p.examPaperId === currentPaper.examPaperId) {
-          const newComposition = [...p.composition];
-          if (score1 !== undefined) {
-            newComposition[0].score = score1;
-          }
-          if (score2 !== undefined) {
-            newComposition[1].score = score2;
-          }
-          const newstudentInfo = { ...p.studentsInfo };
-          newstudentInfo.appraise = values.comment;
-          return {
-            ...p,
-            composition: newComposition,
-            studentsInfo: newstudentInfo,
-            status: values.isEditingMode ? p.status : '已阅',
-            gradedTime: values.isEditingMode ? p.gradedTime : new Date().toLocaleString()
-          };
-        }
-        return p;
-      });
-      setPapers(updatedPapers);
-      if (!values.isEditingMode) {
-        const appraiseData = putAppraise(values.comment, currentPaper.examPaperId);
-        await dispatch(appraiseData);
+      // 2. 深拷贝试卷列表，避免直接修改原数据
+      const updatedPapers = JSON.parse(JSON.stringify(papers));
+      // 3. 精准匹配当前试卷并更新数据
+      const paperIndex = updatedPapers.findIndex(p =>
+        p.examPaperId === currentPaper.examPaperId &&
+        p.paperId === currentPaper.paperId
+      );
+      // 匹配失败直接返回
+      if (paperIndex === -1) {
+        message.error('未找到当前试卷数据');
+        setGradeLoading(false);
+        return;
+      }
 
-        if (score1 !== undefined) {
+      const targetPaper = updatedPapers[paperIndex];
+      // 4. 更新作文分数：增加存在性检查
+      if (score1 !== undefined && targetPaper.composition[0]) {
+        targetPaper.composition[0].score = Number(score1); // 确保是数字
+      }
+      if (score2 !== undefined && targetPaper.composition[1]) {
+        targetPaper.composition[1].score = Number(score2);
+      }
+      // 5. 更新评价内容
+      targetPaper.studentsInfo.appraise = comment || '';
+      // 6. 区分编辑/提交模式：更新状态和时间
+      if (!isEditingMode) {
+        targetPaper.status = '已阅';
+        targetPaper.gradedTime = new Date().toLocaleString();
+      } else {
+        // 编辑模式：保留原状态和时间
+        targetPaper.status = currentPaper.status;
+        targetPaper.gradedTime = currentPaper.gradedTime;
+      }
+
+      // 7. 同步更新前端数据：关键！让界面实时刷新
+      setPapers(updatedPapers);
+      setCurrentPaper({ ...targetPaper }); // 同步更新currentPaper
+
+      // 8. 提交到后端：非编辑模式才调用接口
+      if (!isEditingMode) {
+        // 提交评价：检查参数是否正确
+        if (comment) {
+          const appraiseAction = putAppraise(comment, currentPaper.examPaperId);
+          await dispatch(appraiseAction);
+        }
+        // 提交分数：检查id和分数是否存在
+        if (score1 !== undefined && currentPaper.id?.[0]) {
           await postScore(currentPaper.id[0], score1)();
         }
-        if (score2 !== undefined) {
+        if (score2 !== undefined && currentPaper.id?.[1]) {
           await postScore(currentPaper.id[1], score2)();
         }
+
+        // 9. 查找下一份待阅试卷：修复查找条件
         const nextPaper = updatedPapers.find(p =>
           p.paperName === currentPaper.paperName &&
-          p.id !== currentPaper.id &&
-          p.status === '待阅'
+          p.paperId !== currentPaper.paperId && // 用paperId比较，不是数组id
+          p.status === '未阅'
         );
 
-        if (nextPaper) {
-          if (flag === false) {
-            const resetPaper = {
-              ...nextPaper,
+        // 10. 自动切换到下一份试卷
+        if (nextPaper && !flag) {
+          const resetNextPaper = {
+            ...nextPaper,
+            score: undefined,
+            comment: undefined,
+            questions: (nextPaper.questions || []).map(q => ({
+              ...q,
               score: undefined,
-              comment: undefined,
-              questions: nextPaper.questions.map(q => ({
-                number: q.number,
-                points: q.points,
-                score: undefined,
-                grader: undefined
-              }))
-            };
-            setCurrentPaper(resetPaper);
-            setViewMode('grade');
-          }
-          setTimeout(() => {
-            setGradeLoading(false);
-            setEditorContent('');
-          }, 800);
-        } else {
-          if (flag === false) {
-            setViewMode('list');
-          }
-          setGradeLoading(false);
-          setEditorContent(''); // 提交成功后清空编辑器内容
+              grader: undefined
+            }))
+          };
+          setCurrentPaper(resetNextPaper);
+          setViewMode('grade');
+        } else if (!flag) {
+          setViewMode('list'); // 没有下一份，返回列表
         }
       }
+
+      // 11. 成功提示
+      message.success(isEditingMode ? '评价修改成功' : '评价提交成功');
+      // 12. 重置表单：确保字段名和组件一致
+      form.resetFields(['score1', 'score2', 'comment']);
+      setEditorContent('');
     } catch (error) {
-      console.error('操作失败:', error);
+      // 13. 后端请求失败的错误处理
+      console.error('提交/修改评价失败:', error);
+      message.error(isEditingMode ? '修改失败：' + error.message : '提交失败：' + error.message);
+    } finally {
       setGradeLoading(false);
     }
   };
 
   // 过滤待阅试卷
   const filterPendingPapers = () => {
-    return papers.filter(paper => paper.status === '待阅');
+    return papers.filter(paper => paper.status === '未阅');
   };
 
-  // 开始批阅
-  // const handleStartGrading = () => {
-  //   setEssayLoading(true);
-  //   try {
-  //     const pendingPapers = filterPendingPapers();
-  //     if (!pendingPapers || pendingPapers.length === 0) {
-  //       console.log('没有待阅的试卷');
-  //       return;
-  //     }
-
-  //     const firstPendingPaper = pendingPapers[0];
-  //     if (!firstPendingPaper) {
-  //       console.error('获取待阅试卷失败');
-  //       return;
-  //     }
-
-  //     setCurrentPaper({
-  //       ...firstPendingPaper,
-  //       questions: firstPendingPaper.questions || []
-  //     });
-  //     setViewMode('grade');
-  //   } catch (error) {
-  //     console.error('开始批阅失败:', error);
-  //   } finally {
-  //     setEssayLoading(false);
-  //   }
-  // };
-
-  // 编辑试卷
-  // const handleEditPaper = (restoredData) => {
-  //   setIsEditingMode(true);
-  //   setFlag(true);
-  //   setCurrentPaper({
-  //     ...currentPaper,
-  //     isEditing: true
-  //   });
-  //   setViewMode('grade');
-  // };
   return (
     <Spin spinning={gradeLoading || essayLoading}>
       {paperName.length > 0 && (
@@ -263,28 +251,8 @@ const Evaluation = () => {
                       {
                         title: '试卷批阅'
                       },
-                      // {
-                      //   title: (
-                      //     <>
-                      //       所有试卷
-                      //       <span style={{ marginLeft: 8, color: '#1890ff' }}>
-                      //         (已阅: {papers.filter(p => p.status === '已阅').length}
-                      //         /总数: {papers.length})
-                      //       </span>
-                      //     </>
-                      //   )
-                      // }
                     ]}
                   />
-                  {/* <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                    {currentTask?.deadline && (
-                      <Countdown
-                        title="剩余时间"
-                        value={currentTask.deadline}
-                        format="HH:mm:ss"
-                      />
-                    )}
-                  </div> */}
                   <TaskTable
                     papers={papers}
                     paperName={paperName}
