@@ -1,28 +1,27 @@
 import "./index.scss";
-import { Button, Card } from "antd";
+import { Button, Card, message } from "antd";
 import { useNavigate } from "react-router";
-import { getExam } from "@/api/examPaper";
-import { useEffect, useState } from "react";
+import { getExam, select } from "@/api/examPaper";
+import { useEffect, useRef, useState } from "react";
 import stores from "@/stores";
 import { getStudentId } from "@/api/login";
+import { clearExamLocalData } from "@/utils/helper/examDataManager";
 
 const { Meta } = Card;
+
+const PREFETCH_CONCURRENCY = 2;
 
 const Dashboard = () => {
   const [examList, setExamList] = useState([]);
   const navigate = useNavigate();
-
-  const getTime = (time: string) => {
-    const t = new Date(time).getTime();
-    const current = new Date().getTime();
-    return current > t;
-  };
+  const prefetchingRef = useRef(false);
 
   const getExamList = async () => {
     const res = await getExam(stores.UserStore.userId);
-    console.log(res);
     //@ts-ignore
-    setExamList(res.response.items);
+    const items = res.response.items;
+    setExamList(items);
+    return items;
   };
 
   const fetchGetStudentId = async () => {
@@ -31,36 +30,101 @@ const Dashboard = () => {
     stores.UserStore.setUserId(res.response.value);
   };
 
-  useEffect(() => {
+  const prefetchListenAudio = async (paperId: number) => {
     try {
-      fetchGetStudentId();
+      const cacheExists = await stores.ExamStore.hasAudioCacheForPaper(paperId);
+      if (cacheExists) return;
+
+      const res = await select(paperId);
+      //@ts-ignore
+      if (res.code !== 1) return;
+
+      //@ts-ignore
+      const audioUrl = res.response?.audioFileUrl;
+      if (!audioUrl) return;
+
+      await stores.ExamStore.downloadAudio(paperId, audioUrl);
     } catch (error) {
-      console.log(error);
+      console.warn(`试卷 ${paperId} 听力音频预下载失败`, error);
     }
+  };
+
+  const startBackgroundPrefetch = async (items: any[]) => {
+    if (prefetchingRef.current || !items.length) return;
+    prefetchingRef.current = true;
+
+    try {
+      const paperIds = items.map((item) => item.examPaperId);
+      for (let i = 0; i < paperIds.length; i += PREFETCH_CONCURRENCY) {
+        const batch = paperIds.slice(i, i + PREFETCH_CONCURRENCY);
+        await Promise.all(batch.map((paperId) => prefetchListenAudio(paperId)));
+      }
+    } finally {
+      prefetchingRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        await fetchGetStudentId();
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    init();
   }, []);
 
   useEffect(() => {
-    try {
-      getExamList();
-    } catch (error) {
-      console.log(error);
+    const loadData = async () => {
+      try {
+        const items = await getExamList();
+        await startBackgroundPrefetch(items);
+      } catch (error) {
+        console.log(error);
+        message.warning("试卷音频后台预加载失败，将在进入考试页时继续加载");
+      }
+    };
+
+    if (stores.UserStore.userId) {
+      loadData();
     }
   }, [stores.UserStore.userId]);
 
+  const getResumeExamType = (paperId: number): string | null => {
+    try {
+      const savedStateRaw = localStorage.getItem('examPageState');
+      if (!savedStateRaw) return null;
+
+      const savedState = JSON.parse(savedStateRaw);
+      if (savedState.paperId !== paperId) return null;
+
+      return savedState.currentPageType || 'listen';
+    } catch {
+      return null;
+    }
+  };
+
   const handleConfirmExam = async (id: number) => {
+    const resumeType = getResumeExamType(id);
+
+    if (resumeType) {
+      window.open(`/video?id=${id}&type=${resumeType}`, "_blank");
+      return;
+    }
+
+    clearExamLocalData({
+      clearExamStore: true,
+      clearAnswerStore: true,
+      clearPageState: true,
+      clearTimers: true,
+      clearCachedAnswers: false,
+    });
+
     await stores.AnswerStore.fullReset();
     await stores.ExamStore.fullReset();
     window.open(`/video?id=${id}&type=listen`, "_blank");
-
-    // 请求全屏
-    // const requestFullscreen = () => {
-    //   const element = document.documentElement; // 或者指定某个元素
-    //   if (element.requestFullscreen) {
-    //     element.requestFullscreen();
-    //   }
-    // };
-
-    // requestFullscreen();
   };
 
   const handleSreachTestResult = (
@@ -70,7 +134,7 @@ const Dashboard = () => {
   ) => {
     stores.ExamStore.changePaperId(id);
     if (isAppraise) stores.AnswerStore.appraise = appraise;
-    navigate("/testOver");
+    navigate(`/testOver`);
   };
 
   return (
@@ -86,14 +150,12 @@ const Dashboard = () => {
                 <p>{item.endTime}</p>
                 <Button
                   type="primary"
-                  // disabled={getTime(item.endTime)}
                   onClick={() => handleConfirmExam(item.examPaperId)}
                 >
                   前往考试
                 </Button>
                 <Button
                   type="primary"
-                  // disabled={!getTime(item.endTime)}
                   style={{ marginLeft: "12px" }}
                   onClick={() =>
                     handleSreachTestResult(

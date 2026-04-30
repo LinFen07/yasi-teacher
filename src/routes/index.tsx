@@ -37,6 +37,10 @@ const routes: Array<Router> = [
       {
         path: 'dashboard',
         element: <Dashboard/>
+      },
+      {
+        path: '',
+        element: <Dashboard/>
       }
     ]
   },

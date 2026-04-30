@@ -13,8 +13,8 @@ import { submitStudentSelectAnswer } from "@/utils/browser/submitAnswer";
 import TickQuestion from "../tickQuestion/index";
 import DragQuestion from "../dragQuestion";
 import SelectQuestion from "../selectQuestion";
-import { Exam } from "@/typings/exam";
-
+import { Exam, StudentAnswer } from "@/typings/exam";
+import { judgingProblem } from '@/api/studentAnswer'
 function questions({ exam }: { exam: Exam[] }) {
   const [listensArr, setListensArr] = useState(exam[0]);
   const [questionsArr, setQuestionArr] = useState(listensArr.questionItems);
@@ -25,20 +25,82 @@ function questions({ exam }: { exam: Exam[] }) {
     const index = +stores.ExamStore.currentExamTitle[4] - 1;
     setListensArr(exam[index]);
     setQuestionArr(exam[index].questionItems);
-    console.log(questionsArr);
   }, [stores.ExamStore.currentExamTitle]);
 
+  useEffect(() => {
+    const initAnswers: any = exam.flatMap((item, index) => {
+      return item.questionItems.flatMap((questionItem, index2) => {
+        // console.log(JSON.stringify(questionItem, null, 2))
+        // console.log(index)
+        // 判断是否为多选题（既有correct又有correctArray）
+        const hasCorrect = questionItem.correct !== null && questionItem.correct !== undefined && questionItem.correct !== '';
+        const hasCorrectArray = Array.isArray(questionItem.correctArray) && questionItem.correctArray.length > 0;
+        const isMultiChoice = hasCorrect && hasCorrectArray;
+
+        // 判断是否为多空题（只有correctArray）
+        const isMultiSub = hasCorrectArray && !hasCorrect;
+        if (isMultiSub) {
+          return questionItem.correctArray.map((correct, index3) => {
+            return (
+              {
+                // isCorrect: 0,
+                // paperId: stores.ExamStore.paperId,
+                questionId: questionItem.id,
+                content: "",
+                prefix: `${index3 + 1}`
+                // studentId: stores.UserStore.userId,
+                // score: `${questionItem.items[0].score}`,
+                // questionType: "",
+                // questionOrder: 0,
+              }
+            )
+          })
+        } else if (isMultiChoice) {
+          return ([{
+            // isCorrect: 0,
+            // paperId: stores.ExamStore.paperId,
+            questionId: questionItem.id,
+            content: "",
+            prefix: "1"
+            // studentId: stores.UserStore.userId,
+            // score: `${questionItem.score}`,
+            // questionType: "",
+            // questionOrder: 0,
+          }, ""])
+        } else {
+          return ({
+            // isCorrect: 0,
+            // paperId: stores.ExamStore.paperId,
+            questionId: questionItem.id,
+            content: "",
+            prefix: "1"
+            // studentId: stores.UserStore.userId,
+            // score: `${questionItem.score}`,
+            // questionType: "",
+            // questionOrder: 0,
+          })
+        }
+      })
+    })
+    stores.AnswerStore.initAnswer(initAnswers)
+  }, [exam])
+
   const onChange = (index: number) => (e: any) => {
-    let pre = computedPrevCount(
-      stores.ExamStore.currentExamTitle,
-      stores.ExamStore.currentExam
-    );
-    stores.ExamStore.changeStudentListenAnswer(pre + index + 1, e.target.value);
+    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    const beforeCount = questionsArr
+      .slice(0, index)
+      .reduce(
+        (acc, q) => acc + (Array.isArray(q.correctArray) ? q.correctArray.length : 1),
+        0
+      );
+    const start = pre + beforeCount + 1;
+
+    stores.ExamStore.changeStudentListenAnswer(start, e.target.value);
     const examIndex = +stores.ExamStore.currentExamTitle[4] - 1;
     const value = e.target.value;
 
-    //向数据提交答案
-    submitStudentSelectAnswer(questionsArr, index, value, index + pre);
+    // 向数据提交答案
+    submitStudentSelectAnswer(questionsArr, index, value, start - 1);
 
     const updatedQuestions = { ...questionsArr[index] };
     updatedQuestions.answer = value.toString();
@@ -46,84 +108,60 @@ function questions({ exam }: { exam: Exam[] }) {
       idx === index ? updatedQuestions : question
     );
     setQuestionArr(newQuestionsArr);
-    stores.ExamStore.changeCurrent(pre + index + 1);
+    stores.ExamStore.changeCurrent(start);
     stores.ExamStore.updateListenExam(examIndex, index, updatedQuestions);
+
     runInAction(() => {
-      // 避免重复添加同一题号
-      const currentQuestionNumber = pre + index + 1;
-      if (
-        !stores.ExamStore.correctListenAnswer.includes(currentQuestionNumber)
-      ) {
-        stores.ExamStore.correctListenAnswer.push(currentQuestionNumber);
+      if (!stores.ExamStore.correctListenAnswer.includes(start)) {
+        stores.ExamStore.correctListenAnswer.push(start);
       }
     });
   };
 
   const checkedOnChange = (index: number) => (checkedValues: string[]) => {
-    // 获取当前题目信息
     const currentQuestion = questionsArr[index];
-    // 处理双选题的选择限制
     let finalValues = checkedValues;
     if (checkedValues.length > 2) {
-      // 超过2个选项时，保留最后选择的两个
       finalValues = checkedValues.slice(-2);
     }
 
-    const pre = computedCheckSelectPrevCount(
-      stores.ExamStore.currentExamTitle,
-      exam
-    );
+    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    const beforeCount = questionsArr
+      .slice(0, index)
+      .reduce(
+        (acc, q) => acc + (Array.isArray(q.correctArray) ? q.correctArray.length : 1),
+        0
+      );
+    const start = pre + beforeCount + 1;
+
     stores.ExamStore.changeStudentListenAnswer(
-      pre + index + 1,
+      start,
       finalValues.toString()
     );
+
     const examIndex = +stores.ExamStore.currentExamTitle[4] - 1;
 
     submitStudentSelectAnswer(
       questionsArr,
       index,
       finalValues.toString(),
-      index + pre
+      start - 1
     );
 
     const updatedQuestions = { ...questionsArr[index] };
     updatedQuestions.selectionsAnswer = finalValues;
-    // 同步设置 answer，便于题号变色统一依赖
     updatedQuestions.answer = finalValues.join(",");
     const newQuestionsArr = questionsArr.map((question, idx) =>
       idx === index ? updatedQuestions : question
     );
     setQuestionArr(newQuestionsArr);
-    // 更新当前题号，保障定位
-    stores.ExamStore.changeCurrent(pre + index + 1);
+    stores.ExamStore.changeCurrent(start);
     stores.ExamStore.updateListenExam(examIndex, index, updatedQuestions);
     runInAction(() => {
-      // 根据题目要求数量（correctArray.length）决定需要标记的题号个数
       const requiredCount =
         currentQuestion && Array.isArray(currentQuestion.correctArray)
           ? currentQuestion.correctArray.length
           : 1;
-      // 计算当前题之前累计占用的题号数量（考虑 correctArray.length）
-      const beforeCount = questionsArr
-        .slice(0, index)
-        .reduce(
-          (acc, q) => acc + (Array.isArray(q.correctArray) ? q.correctArray.length : 1),
-          0
-        );
-      // 与 FooterNav 编号策略一致：计算前置分区累计题号数
-      const partIndex = +stores.ExamStore.currentExamTitle[4] - 1;
-      const prevLenPartsSum = exam
-        .slice(0, partIndex)
-        .reduce((acc, part) => {
-          const partCount = part.questionItems.reduce(
-            (pAcc, item) =>
-              pAcc + (Array.isArray(item.correctArray) ? item.correctArray.length : 1),
-            0
-          );
-          return acc + partCount;
-        }, 0);
-      const start = prevLenPartsSum + beforeCount + 1;
-      // 仅当用户选择数量达到要求时，标记为已作答
       if (finalValues.length >= requiredCount) {
         for (let k = 0; k < requiredCount; k++) {
           const num = start + k;
@@ -136,25 +174,38 @@ function questions({ exam }: { exam: Exam[] }) {
   };
 
   useEffect(() => {
-    let prevCount = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
-    let BlanksprevCount = computedBlanksPrevCount(
-      prevCount,
-      stores.ExamStore.currentExamTitle,
-      exam
-    );
+    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    let currentIndexInPart = questionIndex - pre - 1;
+    let accumulated = 0;
+    let foundIndex = -1;
 
-    titleRefs.current[questionIndex - prevCount - 1]?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    for (let i = 0; i < questionsArr.length; i++) {
+      const count = Array.isArray(questionsArr[i].correctArray) ? questionsArr[i].correctArray.length : 1;
+      if (currentIndexInPart >= accumulated && currentIndexInPart < accumulated + count) {
+        foundIndex = i;
+        break;
+      }
+      accumulated += count;
+    }
 
-    const inputAll = document.querySelectorAll(".textInput");
-    //@ts-ignore
-    inputAll[questionIndex - BlanksprevCount - 1]?.focus();
-    inputAll[questionIndex - BlanksprevCount - 1]?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    if (foundIndex !== -1) {
+      titleRefs.current[foundIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      // 处理填空题的聚焦
+      if (questionsArr[foundIndex].topicType === "4") {
+        const inputAll = document.querySelectorAll(".textInput");
+        const inputIndex = currentIndexInPart - accumulated;
+        inputAll[inputIndex]?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        //@ts-ignore
+        inputAll[inputIndex]?.focus();
+      }
+    }
   }, [questionIndex]);
 
   //字体大小
@@ -202,6 +253,63 @@ function questions({ exam }: { exam: Exam[] }) {
     return doc.body.innerHTML;
   };
 
+  // 创建一个清理 HTML 的函数，只清理题目内容中的空 p 标签
+  const cleanQuestionContent = (html: string): string => {
+    if (!html) return html;
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+
+    // 只清理题目内容中的空 p 标签，不清理选项中的
+    const pElements = tempDiv.querySelectorAll("p");
+    pElements.forEach(p => {
+      // 检查这个 p 标签是否在选项部分（通过检查父级结构）
+      const isInOption = p.closest('.ant-radio-wrapper, .ant-checkbox-wrapper');
+
+      if (!isInOption) {
+        const content = p.innerHTML.trim();
+        const hasOnlyBr = /^(<br\s*\/?>)+$/.test(content);
+        const isEmpty = content === '' || content === '<br>' || content === '<br/>';
+        const hasOnlyWhitespace = /^\s*$/.test(p.textContent || '');
+
+        // 新增：检查是否只包含零宽度空格
+        const hasOnlyZeroWidthSpace = /^(&ZeroWidthSpace;|\u200B|\uFEFF)+$/i.test(content) ||
+          /<span[^>]*>&ZeroWidthSpace;<\/span>/i.test(content) ||
+          /<span[^>]*>[\u200B\uFEFF]<\/span>/i.test(content);
+
+        if (hasOnlyBr || isEmpty || hasOnlyWhitespace || hasOnlyZeroWidthSpace) {
+          p.remove();
+        }
+      }
+    });
+
+    return tempDiv.innerHTML;
+  };
+
+  // useEffect(() => {
+  //   console.log(JSON.stringify(questionsArr, null, 2))
+  // }, [questionsArr])
+
+  // 使用 CSS 隐藏题目内容中的空 p 标签，但不影响选项
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* 只针对题目内容区域的空 p 标签 */
+      .listencontent > div > div:first-child p:empty,
+      .listencontent > div > div:first-child p:has(> br:only-child),
+      .listencontent > div > div:first-child p:has(> br:first-child:last-child),
+      .listencontent > div > div:first-child p:contains("&ZeroWidthSpace;"),
+      .listencontent > div > div:first-child p:has(span:contains("&ZeroWidthSpace;")) {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div className="listencontent">
       {questionsArr.map((questionArr, index) => (
@@ -211,10 +319,10 @@ function questions({ exam }: { exam: Exam[] }) {
           ) : questionArr.topicType == "6" ? (
             <DragQuestion {...questionArr}></DragQuestion>
           ) : questionArr.topicType == "4" ? (
-            <div>{parse(replaceFontSize(questionArr.title, fontSize))}</div>
+            <div>{parse(cleanQuestionContent(replaceFontSize(questionArr.title, fontSize)))}</div>
           ) : (
             <div ref={(el) => (titleRefs.current[index] = el)}>
-              {parse(questionArr.title.replace(/<\/?i>/g, ""))}
+              {parse(cleanQuestionContent(replaceFontSize(questionArr.title, fontSize)))}
               {/* 显示双选题提示 */}
               {questionArr.topicType === "7" && (
                 <span style={{ color: "#666", fontSize: "14px" }}>（最多选两项）</span>

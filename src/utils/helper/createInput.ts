@@ -2,7 +2,7 @@
 import stores from '@/stores';
 import type { Exam, ExamType } from '@/typings/exam';
 import { autorun, runInAction, set } from 'mobx';
-import  {computedPrevCount}  from '@/utils/helper/computed';
+import { computedPrevCount } from '@/utils/helper/computed';
 import { submitStudentBlankAnswer } from '../browser/submitAnswer';
 import { restrictChineseInput } from './inputRestriction';
 export function createInput(exam: Array<Exam>, type: string, container: any) {
@@ -45,6 +45,12 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
   const fragment = document.createDocumentFragment();
   let len = index + questionArr.items.length;
   for (let i = index; i < len; i++) {
+    // 检查 span 元素是否存在
+    if (!span[i]) {
+      console.error(`span[${i}] is undefined. Total spans: ${span.length}`);
+      continue;
+    }
+
     const wrapper = document.createElement('div');
     wrapper.className = 'input-wrapper';
 
@@ -52,10 +58,10 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
     const placeholder = document.createElement('span');
     input.className = 'textInput';
     input.setAttribute('data-index', (prevCount + i + 1).toString()); // 设置序号
-    if(stores.AnswerStore.completedAnswers[prevCount + i].studentAnswer){
+    if (stores.AnswerStore.completedAnswers[prevCount + i].studentAnswer) {
       input.value = stores.AnswerStore.completedAnswers[prevCount + i].studentAnswer; // 设置默认值 
     }
-    else{
+    else {
       placeholder.className = 'placeholder';
       placeholder.innerText = (prevCount + i + 1).toString(); // 显示序号
     }
@@ -72,7 +78,7 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
     input.addEventListener('input', (e) => {
       const originalValue = input.value;
       const filteredValue = restrictChineseInput(originalValue);
-      
+
       // 如果输入包含中文，则替换为过滤后的值
       if (originalValue !== filteredValue) {
         input.value = filteredValue;
@@ -83,7 +89,8 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
       if (input.value) {
         placeholder.style.display = 'none';
         const correctIndex = questionArr.correctArray.length - (len - i);
-        submitStudentBlankAnswer(questionArr, i, prevCount, input.value, correctIndex);
+        const prefix = `${correctIndex + 1}`
+        submitStudentBlankAnswer(questionArr, i, prevCount, input.value, correctIndex, prefix);
         runInAction(() => {
           stores.ExamStore.correctListenAnswer.push(prevCount + i + 1);
         });
@@ -114,7 +121,7 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
 
     wrapper.appendChild(placeholder);
     wrapper.appendChild(input);
-    
+
 
     span[i].innerHTML = '';
     span[i].appendChild(wrapper);

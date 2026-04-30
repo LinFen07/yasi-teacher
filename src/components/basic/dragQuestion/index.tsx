@@ -25,7 +25,7 @@ const ItemTypes = {
   OPTION: 'option',
 };
 
-const Option = ({key, option, index }: OptionProps) => {
+const Option = ({ key, option, index }: OptionProps) => {
   const [{ isDragging }, drag, preview] = useDrag(
     () => ({
       type: ItemTypes.OPTION,
@@ -98,7 +98,7 @@ export default function DragQuestion(questionArr: ExamType) {
       const questionMatch = line.match(questionRegex);
 
       if (optionMatch) {
-        Options.push({option: optionMatch[0].trim(), originalIndex: Options.length});
+        Options.push({ option: optionMatch[0].trim(), originalIndex: Options.length });
       }
       else if (questionMatch) {
         let cleanedLine = questionMatch[0].replace(/\*\*/g, '');
@@ -126,18 +126,18 @@ export default function DragQuestion(questionArr: ExamType) {
   }
   const markdown = turndownService.turndown(questionArr.title);
   const { questionTitle, Questions, Options, optionTitle, title } = parseMarkdownToQuestionData(markdown);
-  const [localOptions, setLocalOptions] = useState<{option: string; originalIndex: number}[]>(Options);
+  const [localOptions, setLocalOptions] = useState<{ option: string; originalIndex: number }[]>(Options);
   const [droppedItems, setDroppedItems] = useState<{ questionIndex: number; option: string; originalIndex: number }[]>([]);
   const [studentAnswers, setStudentAnswers] = useState<string[]>(stores.AnswerStore.dragAnswers);
 
   useEffect(() => {
     // 初始化 droppedItems 和 localOptions
     const initialDroppedItems: { questionIndex: number; option: string; originalIndex: number }[] = [];
-    const initialLocalOptions: {option: string; originalIndex: number}[] = [...Options];
+    const initialLocalOptions: { option: string; originalIndex: number }[] = [...Options];
 
     stores.AnswerStore.dragAnswers.forEach((answer, questionIndex) => {
       if (answer) {
-        const optionIndex = Options.indexOf({option: answer, originalIndex: questionIndex});
+        const optionIndex = Options.indexOf({ option: answer, originalIndex: questionIndex });
         if (optionIndex !== -1) {
           initialDroppedItems.push({ questionIndex, option: answer, originalIndex: optionIndex });
           initialLocalOptions.splice(optionIndex, 1);
@@ -151,12 +151,12 @@ export default function DragQuestion(questionArr: ExamType) {
 
   const dragPrevCount = computedDragPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
   const handleDrop = (item: { option: string; index: number }, questionIndex: number) => {
-    submitStudentBlankAnswer(questionArr,questionIndex,dragPrevCount, item.option[0], questionIndex)
+    submitStudentBlankAnswer(questionArr, questionIndex, dragPrevCount, item.option[0], questionIndex, `${questionIndex + 1}`)
     stores.ExamStore.changeCurrent(dragPrevCount + questionIndex + 1);
     stores.AnswerStore.dragAnswers[questionIndex] = item.option;
     setStudentAnswers((prevAnswers) => {
       const newAnswers = [...prevAnswers];
-      newAnswers[item.index] = item.option[0]; 
+      newAnswers[item.index] = item.option[0];
       return newAnswers;
     });
     setDroppedItems((prevItems) => {
@@ -166,12 +166,12 @@ export default function DragQuestion(questionArr: ExamType) {
       // 如果存在现有项，将其移回 localOptions 并从 droppedItems 中移除
       if (existingItem) {
         const originalIndex = existingItem.originalIndex;
-         // 将现有项移回 localOptions 的原始位置
+        // 将现有项移回 localOptions 的原始位置
         setLocalOptions((prevOptions) => {
-        const newOptions = [...prevOptions];
-        newOptions.splice(originalIndex, 0, {option: existingItem.option, originalIndex});
-        return newOptions;
-      });
+          const newOptions = [...prevOptions];
+          newOptions.splice(originalIndex, 0, { option: existingItem.option, originalIndex });
+          return newOptions;
+        });
         newItems = prevItems.filter(droppedItem => droppedItem.questionIndex !== questionIndex);
       }
       // 添加新项
@@ -200,11 +200,11 @@ export default function DragQuestion(questionArr: ExamType) {
       const originalIndex = droppedItems.find(droppedItem => droppedItem.option === item.option)?.originalIndex;
       if (originalIndex !== undefined) {
         // 找到该选项在 newOptions 中的位置
-        const movedIndex = prevOptions.findIndex(item => item.originalIndex >= originalIndex );
-        newOptions.splice(movedIndex, 0, {option: item.option, originalIndex});
+        const movedIndex = prevOptions.findIndex(item => item.originalIndex >= originalIndex);
+        newOptions.splice(movedIndex, 0, { option: item.option, originalIndex });
       } else {
         // 如果找不到原始索引，直接添加到末尾
-        newOptions.push({option: item.option, originalIndex: newOptions.length});
+        newOptions.push({ option: item.option, originalIndex: newOptions.length });
       }
       return newOptions;
     });
@@ -228,15 +228,15 @@ export default function DragQuestion(questionArr: ExamType) {
             ))}
           </div>
           <div className='drag-question-question-box'>
-            <div className='drag-question-title' style={{marginTop:'2vh'}}>{title}</div>
+            <div className='drag-question-title' style={{ marginTop: '2vh' }}>{title}</div>
             {
               Questions.map((question, questionIndex) => (
                 <div key={questionIndex} className='drag-question-question' style={{ marginBottom: '10px' }}>
                   {question}
-                  <DropTarget 
-                    questionIndex={questionIndex} 
-                    onDrop={handleDrop} 
-                    onRemove={handleRemove} 
+                  <DropTarget
+                    questionIndex={questionIndex}
+                    onDrop={handleDrop}
+                    onRemove={handleRemove}
                     droppedItems={
                       droppedItems
                         .filter(item => item.questionIndex === questionIndex)

@@ -6,12 +6,13 @@ export function AddCorrect(exam: Exam[] | null | undefined) {
     console.warn('AddCorrect: exam 数据无效', exam);
     return;
   }
+  // console.log(exam)
   let questionIndex = 0;
-  for(let i = 0; i < exam.length; i++) {
+  for (let i = 0; i < exam.length; i++) {
     const questionItems = exam[i].questionItems;
     for (let j = 0; j < questionItems.length; j++) {
       const questionItem = questionItems[j];
-      if(questionItem.correct) {
+      if (questionItem.correct) {
         stores.AnswerStore.addCorrect(questionIndex, {
           questonId: questionItem.id,
           correct: questionItem.correct,
@@ -19,7 +20,7 @@ export function AddCorrect(exam: Exam[] | null | undefined) {
         questionIndex++;
       }
       else {
-        for(let k = 0; k < questionItem.correctArray.length; k++) {
+        for (let k = 0; k < questionItem.correctArray.length; k++) {
           const correct = questionItem.correctArray[k];
           stores.AnswerStore.addCorrect(questionIndex, {
             questonId: questionItem.id,

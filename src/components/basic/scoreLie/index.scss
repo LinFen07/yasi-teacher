@@ -1,5 +1,18 @@
-.scorepie{
+.scorepie {
   width: 100%;
   height: 30%;
   background-color: #fff;
+}
+
+.button_container {
+  display: flex;
+  justify-content: end;
+  margin-top: 25px;
+  margin-right: 20px;
+}
+
+.score {
+  text-align: end;
+  margin-right: 40px;
+  font-weight: bold;
 }

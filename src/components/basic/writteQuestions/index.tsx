@@ -30,21 +30,21 @@ export default function questions() {
   }, [stores.ExamStore.currentExamTitle, exam]);
 
   useEffect(() => {
-    const index = +stores.ExamStore.currentExamTitle[4]- 1;
+    const index = +stores.ExamStore.currentExamTitle[4] - 1;
     stores.ExamStore.changeWritteAnswer(index, value[index]); // 更新答案到 MobX store
     const text = value[index];
     const count = countWords(text);
 
     setWordCount(count);
-  },[value]);
+  }, [value]);
 
   const handleOnChange = (e: any) => {
     const originalValue = e.target.value;
     const filteredValue = restrictChineseInput(originalValue);
-    
+
     // 如果输入包含中文，则使用过滤后的值
     const finalValue = originalValue !== filteredValue ? filteredValue : originalValue;
-    
+
     if (originalValue !== filteredValue) {
       console.warn('不允许输入中文字符');
     }
@@ -70,7 +70,7 @@ export default function questions() {
       <div className='rightContent'>
         <TextArea
           className='writte-textarea'
-          style={{ height: '90%' }}
+          style={{ minHeight: '500px' }}
           value={value[+stores.ExamStore.currentExamTitle[4] - 1]} // 根据 index 获取对应的答案
           onChange={handleOnChange}
           onKeyDown={(e) => {
@@ -96,9 +96,9 @@ export default function questions() {
             });
           }}
         />
-        <div style={{marginTop: '8px'}}>Word count: {wordCOunt}</div>
+        <div style={{ marginTop: '8px' }}>Word count: {wordCOunt}</div>
       </div>
-      
+
     </div>
   );
 }

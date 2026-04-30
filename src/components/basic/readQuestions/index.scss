@@ -8,7 +8,12 @@
   height: 100%;
   border-right: 1px solid #7e7e7e3f;
   overflow: auto;
+
+  p {
+    line-height: 30px !important;
+  }
 }
+
 .rightContent {
   width: 50%;
   height: 100%;
@@ -20,7 +25,8 @@
   padding: 10px;
   word-wrap: break-word;
   word-break: keep-all;
-  max-width: 800px; /* 限制最大宽度控制每行字数 */
+  max-width: 800px;
+  /* 限制最大宽度控制每行字数 */
 }
 
 .rightContent p {
@@ -30,11 +36,12 @@
   max-width: 100%;
 }
 
-.rightContent p span {
-}
+.rightContent p span {}
+
 .rightContent em {
   font-style: normal;
 }
+
 .parsed-name {
   line-height: 1;
   font-style: normal !important;

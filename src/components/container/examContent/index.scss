@@ -33,7 +33,7 @@
 
 .gapfilling-span {
   height: 20px;
-  width: 200px;
+  width: 180px;
   border: 0px;
   font-size: 16px;
   margin: 0 10px;
@@ -41,7 +41,7 @@
 
 .textInput {
   height: 20px;
-  width: 200px;
+  width: 130px;
   border: 0px;
   border-bottom: 1.5px solid rgba(35, 158, 235, 0.931);
   font-size: 16px;
@@ -101,6 +101,13 @@
   background-color: rgba(194, 17, 17, 0.93);
   color: #fff;
   cursor: pointer;
+}
+
+.flag {
+  background-color: yellow;
+  white-space: pre-wrap;  // 保留空格和换行
+  word-break: break-word; // 允许换行
+  display: inline;        // 保持行内元素
 }
 
 .flagButton{

@@ -33,20 +33,20 @@ export const clearExamLocalData = (options: ExamDataClearOptions = {}) => {
     if (clearExamStore) {
       stores.ExamStore.resetLocalStorage();
       localStorage.removeItem('examStore');
-      console.log('ExamStore数据已清除');
+      // console.log('ExamStore数据已清除');
     }
 
     // 清除AnswerStore数据
     if (clearAnswerStore) {
       stores.AnswerStore.resetLocalStorage();
       localStorage.removeItem('answerStore');
-      console.log('AnswerStore数据已清除');
+      // console.log('AnswerStore数据已清除');
     }
 
     // 清除页面状态数据
     if (clearPageState) {
       localStorage.removeItem('examPageState');
-      console.log('页面状态数据已清除');
+      // console.log('页面状态数据已清除');
     }
 
     // 清除计时器相关数据
@@ -56,16 +56,16 @@ export const clearExamLocalData = (options: ExamDataClearOptions = {}) => {
           localStorage.removeItem(key);
         }
       });
-      console.log('计时器数据已清除');
+      // console.log('计时器数据已清除');
     }
 
     // 清除缓存的答案数据（通常在网络问题时保留）
     if (clearCachedAnswers) {
       localStorage.removeItem('cachedAnswers');
-      console.log('缓存答案数据已清除');
+      // console.log('缓存答案数据已清除');
     }
 
-    console.log('考试本地数据清除完成');
+    // console.log('考试本地数据清除完成');
     return true;
   } catch (error) {
     console.error('清除考试本地数据时出错:', error);

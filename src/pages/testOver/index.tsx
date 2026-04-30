@@ -9,16 +9,16 @@ export default function testOver() {
     window.location.href = '/layout/dashboard'
   }
 
-    return (
+  return (
     <div className='testOver'>
       <div className='headNav' >
         <div>
-          <img src='http://111.230.5.159:9000/yasi/image/logo/logo-04.webp' className='navImg'/>
+          <img src='http://111.230.5.159:9000/yasi/image/logo/logo-04.webp' className='navImg' />
         </div>
         <Button className='close' onClick={closeTest}>关闭</Button>
       </div>
       <div className='Scorecontent'>
-        <Score />
+        {/* <Score /> */}
         <Answer />
       </div>
     </div>

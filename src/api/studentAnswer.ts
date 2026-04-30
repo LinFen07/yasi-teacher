@@ -1,17 +1,17 @@
 import { request } from "@/utils/request";
-import {StudentAnswer} from '@/typings/exam'
-export const submitAnswer = (data: StudentAnswer) => {
-  return request({
-    url: '/api/student/studentAnswer/addStudentAnswer',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    data: `isCorrect=${data.isCorrect}&paperId=${data.paperId}&questionId=${data.questionId}&score=${data.score}&studentAnswer=${data.studentAnswer}&studentId=${data.studentId}&questionType=${data.questionType}`,
-  })
-}
+import { StudentAnswer, StudentSubmitAnswer, StudentWritingAnswer } from '@/typings/exam'
+// export const submitAnswer = (data: StudentAnswer) => {
+//   return request({
+//     url: '/api/student/studentAnswer/addStudentAnswer',
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/x-www-form-urlencoded'
+//     },
+//     data: `isCorrect=${data.isCorrect}&paperId=${data.paperId}&questionId=${data.questionId}&score=${data.score}&studentAnswer=${data.studentAnswer}&studentId=${data.studentId}&questionType=${data.questionType}`,
+//   })
+// }
 
-export const submitAnswerBatch = (data: StudentAnswer[]) => {
+export const submitAnswerBatch = (data: StudentWritingAnswer[]) => {
   return request({
     url: '/api/student/studentAnswer/addStudentAnswerBatch',
     method: 'POST',
@@ -24,5 +24,13 @@ export const getAnswerList = (pageNow: number, pageSize: number, data: any) => {
     url: `/api/student/studentAnswer/page?pageNow=${pageNow}&pageSize=${pageSize}`,
     method: 'POST',
     data: data,
+  })
+}
+
+export const judgingProblem = async (data: StudentSubmitAnswer) => {
+  return request({
+    url: '/api/student/exampaper/answer/answerSubmit',
+    method: 'POST',
+    data: data
   })
 }

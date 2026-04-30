@@ -11,15 +11,14 @@ import { useEventListener } from '@/hooks/core/useEventListener';
 
 const { TextArea } = Input;
 
-type textArr = {
+type HighlightRange = {
+  id: string;
   text: string;
-  isHightlight: boolean;
   note: string;
-  menuPosition: {
-    x: number;
-    y: number;
-  };
-  selection: any
+  startOffset: number;
+  endOffset: number;
+  containerPath: string; // 用于标识容器的路径
+  examTitle: string; // 题目标识
 }
 
 type propType = {
@@ -30,33 +29,45 @@ const examContent = observer((props: propType) => {
   const { type } = props;
 
   const [selectedText, setSelectedText] = useState<string>('');
-  const [flagTextArr, setFlagTextArr] = useState<textArr[]>([
-    {
-      text:'',
-      isHightlight: true,
-      note: '',
-      menuPosition: {x: 0, y: 0},
-      selection: null
-    }
-  ]);
+  const [highlights, setHighlights] = useState<HighlightRange[]>([]);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [menuVisible, setMenuVisible] = useState<boolean>(false);
   const [noteVisible, setNoteVisible] = useState<boolean>(false);
   const [noteText, setNoteText] = useState<string>('');
-  const [isHightlight, setIsHightlight] = useState<boolean>(false);
+  const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
+  const [selectionRange, setSelectionRange] = useState<Range | null>(null);
 
   //字体大小
   const [fontSize, setFontSize] = useState(stores.ExamStore.FontSize);
 
-  /*屏蔽浏览器默认右键事件*/
-  // document.oncontextmenu = function (e) {
-  //   e = e || window.event;
-  //   return false;
-  // };
-
   useEffect(() => {
     setFontSize(stores.ExamStore.FontSize);
   },[stores.ExamStore.FontSize]);
+
+  // 题目切换时清理高亮和状态
+  useEffect(() => {
+    setHighlights([]);
+    setMenuVisible(false);
+    setNoteVisible(false);
+    setCurrentHighlightId(null);
+    setSelectedText('');
+    setNoteText('');
+    
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+    }
+  }, [stores.ExamStore.currentExamIndex, stores.ExamStore.currentExamTitle, type]);
+
+  // 组件卸载时清理
+  useEffect(() => {
+    return () => {
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+      }
+    };
+  }, []);
 
   const handleSelection = () => {
     if(noteVisible) return;
@@ -66,17 +77,18 @@ const examContent = observer((props: propType) => {
         const rect = range.getBoundingClientRect();
         setMenuPosition({ x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
         setSelectedText(selection.toString());
+        setSelectionRange(range.cloneRange());
         setMenuVisible(true);
+        setCurrentHighlightId(null);
     }
   };
 
   const handleCloseMenu = useCallback((e: any) => {
-    if(e.target.className == 'flag') return;
     const selection = window.getSelection();
 
     if (!selection?.toString().length ) {
       setMenuVisible(false);
-      setIsHightlight(false);
+      setCurrentHighlightId(null);
       if(e.target.className == 'note' || e.target.tagName == 'TEXTAREA' || e.target.tagName == 'BUTTON') {
         return;
       };
@@ -92,124 +104,101 @@ const examContent = observer((props: propType) => {
     setNoteText(e.target.value);
   }
 
-  const handleClickSpan = (e:any) => {
-    setNoteVisible(false);
-    flagTextArr.forEach(item => {
-      if(item.text === e.target.innerText) {
-        setMenuPosition({x:item.menuPosition.x, y:item.menuPosition.y});
-        setSelectedText(e.target.innerText);
-        setMenuVisible(true);
-        setNoteText(item.note);
-        setIsHightlight(true); 
-      }
-    })
-  }
+  const handleHighlight = () => {
+    if (!selectionRange || !selectedText) return;
 
-  const handleHighlight = (type: string) => {
-    if(isHightlight) return;
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        
-        flagTextArr.push({
-          text: selection.toString(),
-          isHightlight: true,
-          note: noteText,
-          menuPosition:{
-            x: range.getBoundingClientRect().left + window.scrollX,
-            y: range.getBoundingClientRect().bottom + window.scrollY,
-          },
-          selection: range.cloneRange()
-        });
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    const rects = range.getClientRects();
+    
+    // 计算每个矩形相对于exam-content的位置
+    const examContent = document.querySelector('.exam-content');
+    if (!examContent) return;
+    
+    const contentRect = examContent.getBoundingClientRect();
+    const highlights: Array<{top: number, left: number, width: number, height: number}> = [];
+    
+    for (let i = 0; i < rects.length; i++) {
+      const rect = rects[i];
+      highlights.push({
+        top: rect.top - contentRect.top + examContent.scrollTop,
+        left: rect.left - contentRect.left,
+        width: rect.width,
+        height: rect.height
+      });
+    }
 
-          //创建新的元素
-          const span = document.createElement('span');
-          span.style.backgroundColor = 'yellow'
-          span.className = 'flag';
-          span.id = selection.toString();
-  
-          // 提取选中的文本
-          const textNode = range.extractContents();
-          const text = textNode.textContent;
-        
-          // 将文本设置到新的 span 元素中
-          span.textContent = text;
-  
-          span.addEventListener('click', handleClickSpan);
-  
-          // 将 span 元素插入到原始位置
-          range.insertNode(span);
-        
-          // 重新设置范围以包括新的 span 元素
-          range.setStart(span, 0);
-          range.setEnd(span, span.childNodes.length);
-        
-          // 更新选择以反映新的范围
-          selection.removeAllRanges();
-          selection.addRange(range);
-        
-        if(type == 'note') {
-          const note = document.createElement('button');
-          note.className = 'flagButton';
-          span.appendChild(note);
-        }
+    const newHighlight: HighlightRange = {
+      id: Date.now().toString(),
+      text: selectedText,
+      note: '',
+      startOffset: 0,
+      endOffset: selectedText.length,
+      containerPath: JSON.stringify(highlights), // 存储高亮位置信息
+      examTitle: stores.ExamStore.currentExamTitle
+    };
+
+    setHighlights(prev => [...prev, newHighlight]);
+    setMenuVisible(false);
+    
+    if (selection) {
+      selection.removeAllRanges();
     }
   }
 
   const handleNote = () => {
-    setNoteVisible(true)
-    if(isHightlight && noteText.length == 0) {
-      const note = document.createElement('button');
-      note.className = 'flagButton';
-      document.getElementById(`${selectedText}`)?.appendChild(note);
-    }
-    if(noteText.length == 0) {
-      handleHighlight('note');
-    }
+    setNoteVisible(true);
   }
 
   const handleBlur = () => {
-    if(noteText.length == 0) {
+    if(noteText.length === 0) {
       handleClear();
-      return
+      return;
     }
-    flagTextArr.forEach(item => {
-      if(item.text == selectedText) {
-        item.note = noteText;
+    
+    if (currentHighlightId) {
+      // 更新现有高亮的笔记
+      setHighlights(prev => prev.map(h => 
+        h.id === currentHighlightId ? {...h, note: noteText} : h
+      ));
+    } else {
+      // 创建新高亮（带笔记）
+      if (selectionRange && selectedText) {
+        const newHighlight: HighlightRange = {
+          id: Date.now().toString(),
+          text: selectedText,
+          note: noteText,
+          startOffset: 0,
+          endOffset: selectedText.length,
+          containerPath: '',
+          examTitle: stores.ExamStore.currentExamTitle
+        };
+        setHighlights(prev => [...prev, newHighlight]);
       }
-    })
-    stores.helperStore.changeNoteText(selectedText, noteText);
+    }
+    
     setNoteText('');
+    setNoteVisible(false);
+    setMenuVisible(false);
   }
 
   const handleClear = () => {
-    const span = document.getElementById(`${selectedText}`);
-
-    if(span && span.parentNode) {
-      const parent = span.parentNode;
-      const spanContent = span.innerText;
-
-      parent.removeChild(span);
-      
-      flagTextArr.forEach(item => {
-        if(item.text == selectedText) {
-          item.selection?.insertNode(document.createTextNode(spanContent));
-        };
-      });
-      flagTextArr.filter(e => e.text == span.innerText);
-      setNoteText('');
+    if (currentHighlightId) {
+      setHighlights(prev => prev.filter(h => h.id !== currentHighlightId));
     }
+    setMenuVisible(false);
+    setNoteVisible(false);
+    setCurrentHighlightId(null);
+    setNoteText('');
   }
-  
 
   const handleClearAll = () => {
-    const span = document.getElementById(`${selectedText}`);
-    //TODO:清除事件监听
-    if(span && span.parentNode) {
-      const parentText = span.parentNode.textContent || '';
-      span.parentNode.textContent = parentText;
-      flagTextArr.filter(e => e.text == span.innerText);
-    }
+    setHighlights([]);
+    setMenuVisible(false);
+    setNoteVisible(false);
+    setCurrentHighlightId(null);
     setNoteText('');
   }
 
@@ -222,40 +211,104 @@ const examContent = observer((props: propType) => {
       <div className='title'>{stores.ExamStore.currentExamTitle}
         <div className='title-expin'>{stores.ExamStore.titleExpain}</div>
       </div>
-      <div className='exam-content' style={{fontSize: `${fontSize}px`}}>
-        {
-          type === 'listen' ? (
-            <ListenQuestions ></ListenQuestions>
-          ) : type === 'read' ? (
-            <ReadQuestions ></ReadQuestions>
-          ) : type === 'writte' ?(
-            <WritteQuestions ></WritteQuestions>
-          ) : (
-            <></>
-          )
-        }
-          
+      <div className='exam-content' style={{fontSize: `${fontSize}px`, position: 'relative'}}>
+        {/* 高亮覆盖层 */}
+        {highlights.map(highlight => {
+          try {
+            const positions = JSON.parse(highlight.containerPath);
+            return positions.map((pos: any, idx: number) => (
+              <div
+                key={`${highlight.id}-${idx}`}
+                className='highlight-overlay'
+                style={{
+                  position: 'absolute',
+                  top: `${pos.top}px`,
+                  left: `${pos.left}px`,
+                  width: `${pos.width}px`,
+                  height: `${pos.height}px`,
+                  backgroundColor: 'rgb(246, 238, 11)',
+                  opacity: 0.4,
+                  pointerEvents: 'none',
+                  zIndex: 1
+                }}
+              />
+            ));
+          } catch {
+            return null;
+          }
+        })}
+        
+        <div style={{position: 'relative', zIndex: 2}}>
+          {
+            type === 'listen' ? (
+              <ListenQuestions ></ListenQuestions>
+            ) : type === 'read' ? (
+              <ReadQuestions ></ReadQuestions>
+            ) : type === 'writte' ?(
+              <WritteQuestions ></WritteQuestions>
+            ) : (
+              <></>
+            )
+          }
+        </div>
       </div>
       {
       menuVisible 
-      ? <div style={{ position: 'absolute', top: menuPosition.y, left: menuPosition.x }} className='menuBox'>
+      ? <div style={{ position: 'absolute', top: menuPosition.y, left: menuPosition.x, zIndex: 999 }} className='menuBox'>
             <p>选中的文本: {selectedText}</p>
-            <button onClick={() => handleHighlight('hightLight')}>Highlight</button>
+            <button onClick={handleHighlight}>Highlight</button>
             <button onClick={handleNote}>Note</button>
-            <button onClick={handleClear} disabled={!isHightlight}>Clear</button>
-            <button onClick={handleClearAll} disabled={!isHightlight}>Clear All</button>
+            <button onClick={handleClear} disabled={!currentHighlightId}>Clear</button>
+            <button onClick={handleClearAll} disabled={highlights.length === 0}>Clear All</button>
         </div>
       :<></>
       }
       {
         noteVisible 
-        ? <div className='note' style={{ position: 'absolute', top: menuPosition.y, left: menuPosition.x}}>
+        ? <div className='note' style={{ position: 'absolute', top: menuPosition.y, left: menuPosition.x, zIndex: 999}}>
           <button onClick={handleNoteClose} className='noteCancel'>x</button>
             <p>选中的文本: {selectedText}</p>
-            <TextArea autoFocus onChange={handleNoteText} onBlur={handleBlur} defaultValue= {noteText}></TextArea>
+            <TextArea autoFocus onChange={handleNoteText} onBlur={handleBlur} defaultValue={noteText}></TextArea>
           </div>
         : <></>
       }
+      
+      {/* 显示高亮笔记列表 */}
+      {highlights.filter(h => h.note).length > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          background: 'white',
+          padding: '10px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          maxWidth: '300px',
+          maxHeight: '200px',
+          overflow: 'auto',
+          zIndex: 1000
+        }}>
+          <div style={{fontWeight: 'bold', marginBottom: '8px'}}>
+            笔记 ({highlights.filter(h => h.note).length})
+          </div>
+          {highlights.filter(h => h.note).map(h => (
+            <div key={h.id} style={{
+              fontSize: '12px',
+              padding: '4px',
+              borderBottom: '1px solid #eee',
+              cursor: 'pointer'
+            }}>
+              <div style={{background: 'yellow', display: 'inline-block', padding: '0 4px'}}>
+                {h.text.substring(0, 20)}{h.text.length > 20 ? '...' : ''}
+              </div>
+              <div style={{color: '#666', fontSize: '11px', marginTop: '2px'}}>
+                📝 {h.note}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      
       <div className='empty'></div>
     </div>
   )

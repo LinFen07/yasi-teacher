@@ -126,7 +126,7 @@ const tickQuestion = (questionArr: ExamType) => {
   const turndownService = new TurndownService();
   const markdown = turndownService.turndown(questionArr.title);
   const { tableData, png, questionTitle } = parseMarkdownToTableData(markdown);
-  const [ studentAnswers, setStudentAnswers ] = useState<string[]>(stores.AnswerStore.tickAnswers);
+  const [studentAnswers, setStudentAnswers] = useState<string[]>(stores.AnswerStore.tickAnswers);
   const [dataSource, setDataSource] = useState<RecordType[]>(() => {
     return tableData.map((item, index) => {
       const answer = studentAnswers[index];
@@ -139,15 +139,15 @@ const tickQuestion = (questionArr: ExamType) => {
       return item;
     });
   });
-  
+
   useEffect(() => {
     return () => {
       console.log(stores.AnswerStore.tickAnswers.toString());
     }
-  },[])
+  }, [])
 
   const handleCellClick = (record: RecordType, dataIndex: string) => {
-    submitStudentBlankAnswer(questionArr,record.key - PrevCount - 1,PrevCount, dataIndex, record.key - PrevCount - 1);
+    submitStudentBlankAnswer(questionArr, record.key - PrevCount - 1, PrevCount, dataIndex, record.key - PrevCount - 1, `${record.key - PrevCount}`);
     stores.ExamStore.changeCurrent(record.key);
     setStudentAnswers((prevAnswers) => {
       const newAnswers = [...prevAnswers];
