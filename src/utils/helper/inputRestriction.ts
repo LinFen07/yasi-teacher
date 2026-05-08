@@ -40,7 +40,7 @@ export const addChineseRestriction = (
     const target = e.target as HTMLInputElement | HTMLTextAreaElement;
     const originalValue = target.value;
     const filteredValue = restrictChineseInput(originalValue);
-    
+
     if (originalValue !== filteredValue) {
       target.value = filteredValue;
       if (onWarning) {
@@ -48,7 +48,7 @@ export const addChineseRestriction = (
       } else {
         console.warn('不允许输入中文字符');
       }
-      
+
       // 触发 input 事件以确保 React 状态更新
       const inputEvent = new Event('input', { bubbles: true });
       target.dispatchEvent(inputEvent);
@@ -72,7 +72,7 @@ export const addChineseRestriction = (
     const target = e.target as HTMLInputElement | HTMLTextAreaElement;
     const filteredValue = restrictChineseInput(target.value);
     target.value = filteredValue;
-    
+
     // 触发 input 事件以确保 React 状态更新
     const inputEvent = new Event('input', { bubbles: true });
     target.dispatchEvent(inputEvent);
@@ -102,7 +102,7 @@ export const getChineseRestrictionProps = (onWarning?: (message: string) => void
       const target = e.target as HTMLInputElement | HTMLTextAreaElement;
       const originalValue = target.value;
       const filteredValue = restrictChineseInput(originalValue);
-      
+
       if (originalValue !== filteredValue) {
         target.value = filteredValue;
         if (onWarning) {

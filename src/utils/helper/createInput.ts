@@ -58,10 +58,13 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
     const placeholder = document.createElement('span');
     input.className = 'textInput';
     input.setAttribute('data-index', (prevCount + i + 1).toString()); // 设置序号
-    if (stores.AnswerStore.completedAnswers[prevCount + i].studentAnswer) {
-      input.value = stores.AnswerStore.completedAnswers[prevCount + i].studentAnswer; // 设置默认值 
-    }
-    else {
+    const savedAnswer = stores.AnswerStore.completedAnswers[prevCount + i]?.content || '';
+    if (savedAnswer) {
+      input.value = savedAnswer; // 恢复已填写的答案
+      placeholder.className = 'placeholder';
+      placeholder.innerText = (prevCount + i + 1).toString(); // 显示序号
+      placeholder.style.display = 'none';
+    } else {
       placeholder.className = 'placeholder';
       placeholder.innerText = (prevCount + i + 1).toString(); // 显示序号
     }

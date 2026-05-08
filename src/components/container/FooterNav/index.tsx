@@ -106,7 +106,7 @@ function footerNav(props: propType) {
     if (savedTitle && savedTitle !== "Part1") {
       // 根据保存的currentExamIndex找到对应的页面信息
       handleChangeTitle(savedIndex);
-    } else {
+    } else if (initialPageArr.length > 0) {
       // 使用默认状态
       store.ExamStore.changeCurrentTitle(initialPageArr[0].title);
       store.ExamStore.changeTitleExpain(initialPageArr[0].headTitleExpain);
@@ -217,7 +217,7 @@ function footerNav(props: propType) {
             className="navButton"
             icon={<ArrowRightOutlined style={{ fontSize: "32px" }} />}
             disabled={
-              curren == initialPageArr[initialPageArr.length - 1].maxNum
+              initialPageArr.length > 0 && curren == initialPageArr[initialPageArr.length - 1].maxNum
             }
             onClick={() => handleArrowAction("right")}
           ></Button>

@@ -23,8 +23,6 @@ export const getAdminExam = async () => {
 }
 
 
-
-
 // export const getExam = async() => {
 //   return request({
 //       url: '/api/student/exam/paper/pageList',

@@ -1,5 +1,5 @@
 
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Checkbox, Form, Input, Flex, message, Select, Cascader } from 'antd';
 import { fetchRegister, getExamMeal } from "@/api/register";
@@ -51,12 +51,10 @@ function LoginRoute(props: Props) {
       res = await fetchLogin(va);
       //@ts-ignore
       if (res.code == 1) {
-        const cookies = document.cookie;
-        stores.UserStore.login(cookies);
-        stores.UserStore.setName(values.userName);
-
+        //@ts-ignore
+        stores.UserStore.login(res.response || res.data || {});
         message.success('登录成功');
-        navigate('/layout/dashboard');
+        navigate('/layout/dashboard', { replace: true });
       }
       else {
         // @ts-ignore
@@ -221,7 +219,10 @@ function LoginRoute(props: Props) {
                       <Form.Item wrapperCol={{ span: 25, offset: 1 }}>
                         <Flex>
                           <Form.Item name="remember" valuePropName="checked" noStyle>
-                            <Checkbox></Checkbox><label className="rememberCheck">记住我</label>
+                            <span>
+                              <Checkbox />
+                              <label className="rememberCheck">记住我</label>
+                            </span>
                           </Form.Item>
                           <label><a href="#"><b>忘记密码？</b></a></label>
                         </Flex>

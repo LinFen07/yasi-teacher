@@ -1,8 +1,9 @@
 import axios from 'axios';
+import UserStore from '@/stores/user';
 
 const request = axios.create({
-  baseURL: 'http://111.230.5.159:8668',
-  // baseURL: 'http://localhost:3000',
+  // baseURL: 'http://111.230.5.159:8668',
+  baseURL: 'http://10.182.92.162:8668',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -62,6 +63,9 @@ export const get = function (url: string, params: any) {
 
 //添加请求拦截器
 request.interceptors.request.use((config) => {
+  if (UserStore.token) {
+    config.headers.set('Authorization', `Bearer ${UserStore.token}`);
+  }
   return config
 }, (error) => {
   return Promise.reject(error)

@@ -28,6 +28,14 @@ function questions({ exam }: { exam: Exam[] }) {
   }, [stores.ExamStore.currentExamTitle]);
 
   useEffect(() => {
+    const hasExistingAnswers = stores.AnswerStore.completedAnswers.some((item: any) => {
+      return item && typeof item === 'object' && (item.content || item.studentAnswer);
+    });
+
+    if (hasExistingAnswers) {
+      return;
+    }
+    console.log(7777777)
     const initAnswers: any = exam.flatMap((item, index) => {
       return item.questionItems.flatMap((questionItem, index2) => {
         // console.log(JSON.stringify(questionItem, null, 2))

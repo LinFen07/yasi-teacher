@@ -24,7 +24,7 @@ const studentAnswer: StudentAnswer = {
 }
 
 const studentWritingAnswer: StudentWritingAnswer = {
-  examPaperId: stores.ExamStore.paperId,
+  paperId: stores.ExamStore.paperId,
   questionId: 0,
   composition: '1',
   studentId: stores.UserStore.userId,
@@ -80,7 +80,7 @@ export function submitStudentWritteAnswer(
 ): void {
   Object.assign(studentWritingAnswer, {
     // isCorrect: 0,
-    examPaperId: stores.ExamStore.paperId,
+    paperId: stores.ExamStore.paperId,
     questionId: questionArr.id,
     composition: value,
     studentId: stores.UserStore.userId,

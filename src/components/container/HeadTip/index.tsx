@@ -148,7 +148,7 @@ const HeadTip = forwardRef((props: propType) => {
         userId: stores.UserStore.userId
       }
       console.log(JSON.stringify(listenData_, null, 2))
-      // judgingProblem(listenData_);
+      judgingProblem(listenData_);
       clearModuleData(type);
       navigate(`/video?id=${examstore.paperId}&type=read`, { replace: true });
       // safeSubmitAndClear(
@@ -189,8 +189,8 @@ const HeadTip = forwardRef((props: propType) => {
         type: 'READING',
         userId: stores.UserStore.userId
       }
-      console.log(JSON.stringify(ReadData_, null, 2))
-      // judgingProblem(ReadData_)
+      // console.log(JSON.stringify(ReadData_, null, 2))
+      judgingProblem(ReadData_)
       clearModuleData(type);
       navigate(`/video?id=${examstore.paperId}&type=writte`, { replace: true });
       // safeSubmitAndClear(
@@ -212,9 +212,9 @@ const HeadTip = forwardRef((props: propType) => {
         submitStudentWritteAnswer(examstore.wirrteExam[0].questionItems[0], 0, examstore.correctWritte[0]);
         submitStudentWritteAnswer(examstore.wirrteExam[1].questionItems[0], 1, examstore.correctWritte[1]);
 
-        console.log('准备提交写作答案:', JSON.stringify(stores.AnswerStore.writingAnswers, null, 2));
+        // console.log('准备提交写作答案:', JSON.stringify(stores.AnswerStore.writingAnswers, null, 2));
 
-        // submitAnswerBatch(stores.AnswerStore.writingAnswers)
+        submitAnswerBatch(stores.AnswerStore.writingAnswers)
         navigate(`/video?id=${examstore.paperId}&type=end`, { replace: true });
         // 使用安全提交和清理流程 - 考试完成时清除所有数据
         // safeSubmitAndClear(
@@ -230,7 +230,7 @@ const HeadTip = forwardRef((props: propType) => {
         //   }
         // );
       } catch (error) {
-        console.error('准备写作答案时出错:', error);
+        // console.error('准备写作答案时出错:', error);
         navigate(`/video?id=${examstore.paperId}&type=end`, { replace: true });
       }
     }

@@ -91,8 +91,8 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
 
     // 监听消息
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'AUDIO_DOWNLOADED' && 
-          event.data.paperId === stores.ExamStore.paperId) {
+      if (event.data.type === 'AUDIO_DOWNLOADED' &&
+        event.data.paperId === stores.ExamStore.paperId) {
         console.log('📨 收到下载完成消息，试卷ID:', event.data.paperId);
         checkAudioStatus();
       }
@@ -111,7 +111,7 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
       if (audioStatus === "checking") {
         message.warning("音频检查中，请稍候...");
       } else if (audioStatus === "preparing") {
-        message.warning("音频正在下载中，请等待下载完成后再开始考试");
+        message.warning("音频正在准备中,请稍后...");
       } else if (audioStatus === "error") {
         message.error("音频加载失败，请刷新页面重试");
       }
@@ -131,19 +131,19 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
     if (type !== "listen") return null;
 
     if (audioStatus === "checking") {
-      return <p style={{ fontSize: "14px", color: "#666", marginTop: "8px", marginBottom: 0 }}>检查音频状态...</p>;
+      return <p style={{ fontSize: "16px", color: "#666", marginTop: "16px" }}>检查音频状态...</p>;
     }
 
     if (audioStatus === "preparing") {
-      return <p style={{ fontSize: "14px", color: "#faad14", marginTop: "8px", marginBottom: 0 }}>⬇️ 音频准备中...准备完成即可开始考试</p>;
+      return <p style={{ fontSize: "16px", color: "#faad14", marginTop: "16px" }}>⬇️ 音频准备中...准备完成即可开始考试</p>;
     }
 
     if (audioStatus === "error") {
-      return <p style={{ fontSize: "14px", color: "#ff4d4f", marginTop: "8px", marginBottom: 0 }}>❌ 音频加载失败</p>;
+      return <p style={{ fontSize: "16px", color: "#ff4d4f", marginTop: "16px" }}>❌ 音频加载失败</p>;
     }
 
     if (audioStatus === "ready") {
-      return <p style={{ fontSize: "14px", color: "#52c41a", marginTop: "8px", marginBottom: 0 }}>✅ 音频已准备就绪</p>;
+      return <p style={{ fontSize: "16px", color: "#52c41a", marginTop: "16px" }}>✅ 音频已准备就绪</p>;
     }
 
     return null;
@@ -170,10 +170,9 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
                 {renderAudioStatus()}
                 {isConfirmed ? (
                   <button
-                    className={`video-confirm-button ${type === "listen" && audioStatus !== "ready" ? "video-confirm-button-disabled" : ""}`}
+                    className="video-confirm-button"
                     onClick={handlerStart}
-                    disabled={type === "listen" && audioStatus !== "ready"}
-                    style={{ marginTop: "8px" }}
+                    style={{ marginTop: "16px", opacity: type === "listen" && audioStatus !== "ready" ? 0.5 : 1, cursor: type === "listen" && audioStatus !== "ready" ? "not-allowed" : "pointer" }}
                   >
                     <ArrowRightOutlined style={{ marginRight: "12px" }} />
                     Start {title}
@@ -181,7 +180,7 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
                 ) : (
                   <div className="video-confirm-container">
                     <h4 className="video-ready">Ready?</h4>
-                    <p style={{ fontSize: "18px", marginBottom: "12px" }}>
+                    <p style={{ fontSize: "18px" }}>
                       Please confirm that you have understood the instructions
                       above.
                     </p>

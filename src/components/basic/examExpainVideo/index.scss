@@ -30,13 +30,12 @@
 }
 
 .video-confirm-container {
-  margin-top: 16px;
+  margin-top: 24px;
 }
 
 .video-ready{
   font-weight: 800;
   font-size: 24px;
-  margin-bottom: 12px;
 }
 
 .video-confirm-button {
@@ -45,12 +44,4 @@
   color: white;
   font-size: 18px;
   cursor: pointer;
-}
-
-.video-confirm-button:disabled,
-.video-confirm-button-disabled {
-  background-color: #bfbfbf;
-  color: #666;
-  cursor: not-allowed;
-  border-color: #bfbfbf;
 }

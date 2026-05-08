@@ -1,130 +1,133 @@
 import "./index.scss";
-import { Button, Card, message } from "antd";
+import { Button, Card } from "antd";
 import { useNavigate } from "react-router";
 import { getExam, select } from "@/api/examPaper";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import stores from "@/stores";
 import { getStudentId } from "@/api/login";
-import { clearExamLocalData } from "@/utils/helper/examDataManager";
 
 const { Meta } = Card;
-
-const PREFETCH_CONCURRENCY = 2;
 
 const Dashboard = () => {
   const [examList, setExamList] = useState([]);
   const navigate = useNavigate();
-  const prefetchingRef = useRef(false);
+
+  const getTime = (time: string) => {
+    const t = new Date(time).getTime();
+    const current = new Date().getTime();
+    return current > t;
+  };
 
   const getExamList = async () => {
     const res = await getExam(stores.UserStore.userId);
+    // console.log(res);
     //@ts-ignore
-    const items = res.response.items;
-    setExamList(items);
-    return items;
+    setExamList(res.response.items);
   };
 
   const fetchGetStudentId = async () => {
-    const res = await getStudentId(stores.UserStore.name);
+    const res = await getStudentId(stores.UserStore.userName);
+    console.log(res.data)
     // @ts-ignore
     stores.UserStore.setUserId(res.response.value);
   };
 
-  const prefetchListenAudio = async (paperId: number) => {
+  const downloadAudioIfNeeded = async () => {
     try {
-      const cacheExists = await stores.ExamStore.hasAudioCacheForPaper(paperId);
-      if (cacheExists) return;
+      const userId = stores.UserStore.userId;
+      if (!userId) return;
 
-      const res = await select(paperId);
-      //@ts-ignore
-      if (res.code !== 1) return;
+      const channel = new BroadcastChannel('audio_download_channel');
 
-      //@ts-ignore
-      const audioUrl = res.response?.audioFileUrl;
-      if (!audioUrl) return;
+      const examRes = await getExam(userId);
+      // @ts-ignore
+      const examListData = examRes.response.items || [];
+      for (const exam of examListData) {
+        try {
+          // ✅ 1. 检查缓存是否存在
+          const isCached = await stores.ExamStore.hasAudioCacheForPaper(exam.examPaperId);
+          if (!isCached) {
+            // 无缓存，获取音频地址并下载
+            console.log(`🔍 试卷 ${exam.examPaperId} 未缓存，获取音频地址...`);
+            const paperRes = await select(exam.examPaperId);
+            // @ts-ignore
+            const audioUrl = paperRes.response?.audioFileUrl;
 
-      await stores.ExamStore.downloadAudio(paperId, audioUrl);
-    } catch (error) {
-      console.warn(`试卷 ${paperId} 听力音频预下载失败`, error);
-    }
-  };
+            if (audioUrl) {
+              await stores.ExamStore.downloadAudio(exam.examPaperId, audioUrl);
+              // 发送消息通知其他窗口
+              channel.postMessage({
+                type: 'AUDIO_DOWNLOADED',
+                paperId: exam.examPaperId,
+              });
+            }
+            continue;
+          }
 
-  const startBackgroundPrefetch = async (items: any[]) => {
-    if (prefetchingRef.current || !items.length) return;
-    prefetchingRef.current = true;
+          // ✅ 2. 有缓存，检查是否需要重新下载
+          console.log(`✅ 试卷 ${exam.examPaperId} 已有缓存，检查是否需要更新...`);
+          const paperRes = await select(exam.examPaperId);
+          // @ts-ignore
+          const audioUrl = paperRes.response?.audioFileUrl;
 
-    try {
-      const paperIds = items.map((item) => item.examPaperId);
-      for (let i = 0; i < paperIds.length; i += PREFETCH_CONCURRENCY) {
-        const batch = paperIds.slice(i, i + PREFETCH_CONCURRENCY);
-        await Promise.all(batch.map((paperId) => prefetchListenAudio(paperId)));
+          if (audioUrl) {
+            const needRedownload = await stores.ExamStore.shouldRedownload(
+              exam.examPaperId,
+              audioUrl
+            );
+
+            if (needRedownload) {
+              console.log(`🔄 试卷 ${exam.examPaperId} 音频已更新，重新下载...`);
+              await stores.ExamStore.downloadAudio(exam.examPaperId, audioUrl);
+              // 发送消息通知其他窗口
+              channel.postMessage({
+                type: 'AUDIO_DOWNLOADED',
+                paperId: exam.examPaperId,
+              });
+            } else {
+              console.log(`⏭️ 试卷 ${exam.examPaperId} 已是最新版本，使用缓存`);
+            }
+          }
+        } catch (error) {
+          console.warn(`⚠️ 处理试卷 ${exam.examPaperId} 失败:`, error);
+        }
       }
-    } finally {
-      prefetchingRef.current = false;
+    } catch (error) {
+      console.error('获取试卷列表失败:', error);
     }
   };
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        await fetchGetStudentId();
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    init();
+    try {
+      fetchGetStudentId();
+    } catch (error) {
+      console.log(error);
+    }
   }, []);
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const items = await getExamList();
-        await startBackgroundPrefetch(items);
-      } catch (error) {
-        console.log(error);
-        message.warning("试卷音频后台预加载失败，将在进入考试页时继续加载");
-      }
-    };
-
-    if (stores.UserStore.userId) {
-      loadData();
+    try {
+      getExamList();
+      downloadAudioIfNeeded();
+    } catch (error) {
+      console.log(error);
     }
   }, [stores.UserStore.userId]);
 
-  const getResumeExamType = (paperId: number): string | null => {
-    try {
-      const savedStateRaw = localStorage.getItem('examPageState');
-      if (!savedStateRaw) return null;
-
-      const savedState = JSON.parse(savedStateRaw);
-      if (savedState.paperId !== paperId) return null;
-
-      return savedState.currentPageType || 'listen';
-    } catch {
-      return null;
-    }
-  };
-
   const handleConfirmExam = async (id: number) => {
-    const resumeType = getResumeExamType(id);
-
-    if (resumeType) {
-      window.open(`/video?id=${id}&type=${resumeType}`, "_blank");
-      return;
-    }
-
-    clearExamLocalData({
-      clearExamStore: true,
-      clearAnswerStore: true,
-      clearPageState: true,
-      clearTimers: true,
-      clearCachedAnswers: false,
-    });
-
     await stores.AnswerStore.fullReset();
     await stores.ExamStore.fullReset();
     window.open(`/video?id=${id}&type=listen`, "_blank");
+
+    // 请求全屏
+    // const requestFullscreen = () => {
+    //   const element = document.documentElement; // 或者指定某个元素
+    //   if (element.requestFullscreen) {
+    //     element.requestFullscreen();
+    //   }
+    // };
+
+    // requestFullscreen();
   };
 
   const handleSreachTestResult = (
@@ -150,12 +153,14 @@ const Dashboard = () => {
                 <p>{item.endTime}</p>
                 <Button
                   type="primary"
+                  // disabled={getTime(item.endTime)}
                   onClick={() => handleConfirmExam(item.examPaperId)}
                 >
                   前往考试
                 </Button>
                 <Button
                   type="primary"
+                  // disabled={!getTime(item.endTime)}
                   style={{ marginLeft: "12px" }}
                   onClick={() =>
                     handleSreachTestResult(

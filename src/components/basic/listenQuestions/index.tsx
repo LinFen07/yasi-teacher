@@ -1,6 +1,5 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { Spin } from 'antd';
 import stores from '@/stores';
 import parse from 'html-react-parser';
 import { observer } from 'mobx-react';
@@ -13,8 +12,7 @@ import { useEventListener } from '@/hooks/core/useEventListener';
 const listenQuestions = () => {
   const exam = stores.ExamStore.getListenExam();
 
-  const [listensArr, setListensArr] = useState(exam[0]);
-  const [audioLoading, setAudioLoading] = useState(false);
+  const [listensArr, setListensArr] = useState(exam[0] || null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,38 +22,6 @@ const listenQuestions = () => {
       createInput(exam, 'listen', containerRef.current);
     }
   },[stores.ExamStore.currentExamTitle]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const ensureAudioLoaded = async () => {
-      const paperId = stores.ExamStore.paperId;
-      const audioUrl = stores.ExamStore.getListenAudio();
-
-      if (!paperId || !audioUrl) {
-        setAudioLoading(false);
-        return;
-      }
-
-      try {
-        const hasCache = await stores.ExamStore.hasAudioCacheForPaper(paperId);
-        if (!hasCache) {
-          if (mounted) setAudioLoading(true);
-          await stores.ExamStore.ensureAudioReady(paperId, audioUrl);
-        }
-      } catch (error) {
-        console.error('听力音频加载失败:', error);
-      } finally {
-        if (mounted) setAudioLoading(false);
-      }
-    };
-
-    ensureAudioLoaded();
-
-    return () => {
-      mounted = false;
-    };
-  }, [stores.ExamStore.paperId, stores.ExamStore.listenAudio]);
 
   // 安全解析 HTML 内容的函数
   const safeParseHtml = (htmlContent: string) => {
@@ -98,20 +64,16 @@ const listenQuestions = () => {
   };
   useEventListener('beforeunload', () => saveProgress(), window as any);
 
+  if (!listensArr) {
+    return <div className='lllll'>加载中...</div>;
+  }
+
   return (
     <div className='lllll'>
-      {audioLoading ? (
-        <div style={{ minHeight: 240, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Spin size="large" tip="听力音频加载中..." />
-        </div>
-      ) : (
-        <>
-          <div className='contentTitle'>{safeParseHtml(listensArr.name)}</div>
-          <div ref={containerRef}>
-            <Questions exam={exam}/>
-          </div>
-        </>
-      )}
+      <div className='contentTitle'>{safeParseHtml(listensArr.name)}</div>
+      <div ref={containerRef}>
+        <Questions exam={exam}/>
+      </div>
      </div>
   )
 

@@ -526,19 +526,6 @@ class ExamStore {
 
     console.log('📥 批量下载音频完成');
   }
-
-  async ensureAudioReady(paperId: number, url: string): Promise<boolean> {
-    if (!paperId || !url) return false;
-
-    const hasCache = await this.hasAudioCacheForPaper(paperId);
-    if (hasCache) {
-      this.downloadCompleteMap[paperId] = true;
-      return true;
-    }
-
-    await this.downloadAudio(paperId, url);
-    return true;
-  }
 }
 
 export default new ExamStore();

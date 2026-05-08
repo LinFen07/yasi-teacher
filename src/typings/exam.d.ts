@@ -57,7 +57,7 @@ export type StudentSubmitAnswer = {
 }
 
 export type StudentWritingAnswer = {
-  examPaperId: number,
+  paperId: number,
   questionId: number,
   composition: string,
   studentId: number,
