@@ -2,8 +2,8 @@ import axios from 'axios';
 import UserStore from '@/stores/user';
 
 const request = axios.create({
-  // baseURL: 'http://111.230.5.159:8668',
-  baseURL: 'http://10.182.92.162:8668',
+  baseURL: 'http://111.230.5.159:8668',
+  // baseURL: 'http://10.182.92.162:8668',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

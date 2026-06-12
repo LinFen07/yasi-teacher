@@ -17,7 +17,7 @@ export const submitAnswerBatch = (data: StudentWritingAnswer[]) => {
     method: 'POST',
     data: data,
   })
-}
+}//作文
 
 export const getAnswerList = (pageNow: number, pageSize: number, data: any) => {
   return request({
@@ -32,5 +32,12 @@ export const judgingProblem = async (data: StudentSubmitAnswer) => {
     url: '/api/student/exampaper/answer/answerSubmit',
     method: 'POST',
     data: data
+  })
+}//阅读和听力
+
+export const getComposition = (paperId: number) => {
+  return request({
+    url: `/api/student/studentAnswer/getStudentWritingScores?paperId=${paperId}`,
+    method: 'GET'
   })
 }

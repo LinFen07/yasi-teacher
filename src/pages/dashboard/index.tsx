@@ -1,15 +1,18 @@
 import "./index.scss";
-import { Button, Card } from "antd";
+import { Button, Card, Modal } from "antd";
 import { useNavigate } from "react-router";
 import { getExam, select } from "@/api/examPaper";
 import { useEffect, useState } from "react";
 import stores from "@/stores";
 import { getStudentId } from "@/api/login";
+import { getExamProgress, hasOngoingExam, initExamProgress, clearAllExamData, clearExamProgress } from "@/utils/helper/examDataManager";
 
 const { Meta } = Card;
 
 const Dashboard = () => {
   const [examList, setExamList] = useState([]);
+  const [ongoingModalVisible, setOngoingModalVisible] = useState(false);
+  const [pendingExamId, setPendingExamId] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const getTime = (time: string) => {
@@ -20,9 +23,8 @@ const Dashboard = () => {
 
   const getExamList = async () => {
     const res = await getExam(stores.UserStore.userId);
-    // console.log(res);
-    //@ts-ignore
-    setExamList(res.response.items);
+    const items = res?.response?.items ?? res?.data?.response?.items ?? res?.data?.items ?? [];
+    setExamList(items);
   };
 
   const fetchGetStudentId = async () => {
@@ -40,8 +42,7 @@ const Dashboard = () => {
       const channel = new BroadcastChannel('audio_download_channel');
 
       const examRes = await getExam(userId);
-      // @ts-ignore
-      const examListData = examRes.response.items || [];
+      const examListData = examRes?.response?.items ?? examRes?.data?.response?.items ?? examRes?.data?.items ?? [];
       for (const exam of examListData) {
         try {
           // ✅ 1. 检查缓存是否存在
@@ -115,19 +116,65 @@ const Dashboard = () => {
   }, [stores.UserStore.userId]);
 
   const handleConfirmExam = async (id: number) => {
-    await stores.AnswerStore.fullReset();
-    await stores.ExamStore.fullReset();
+    console.log('=== handleConfirmExam ===');
+    console.log('id:', id, 'type:', typeof id);
+    const progress = getExamProgress(id);
+    console.log('progress:', progress);
+
+    if (progress) {
+      const allCompleted =
+        progress.listen.status === 'completed' &&
+        progress.read.status === 'completed' &&
+        progress.writte.status === 'completed';
+
+      if (allCompleted) {
+        console.log('全部完成，直接开始新考试');
+        startNewExam(id);
+      } else {
+        const hasProgress =
+          progress.listen.status !== 'not_started' ||
+          progress.read.status !== 'not_started' ||
+          progress.writte.status !== 'not_started';
+
+        if (hasProgress) {
+          console.log('有实际进度，弹出 Modal');
+          setPendingExamId(id);
+          setOngoingModalVisible(true);
+        } else {
+          console.log('没有实际进度，直接开始新考试');
+          startNewExam(id);
+        }
+      }
+    } else {
+      console.log('没有 examProgress，直接开始新考试');
+      startNewExam(id);
+    }
+  };
+
+  const startNewExam = (id: number) => {
+    clearAllExamData();
+    clearExamProgress(id);
+    initExamProgress(id);
+    stores.AnswerStore.fullReset();
+    stores.ExamStore.fullReset();
     window.open(`/video?id=${id}&type=listen`, "_blank");
+  };
 
-    // 请求全屏
-    // const requestFullscreen = () => {
-    //   const element = document.documentElement; // 或者指定某个元素
-    //   if (element.requestFullscreen) {
-    //     element.requestFullscreen();
-    //   }
-    // };
+  const continueExam = (id: number) => {
+    const progress = getExamProgress(id);
+    let targetType = 'listen';
 
-    // requestFullscreen();
+    if (progress?.listen.status !== 'completed') {
+      targetType = 'listen';
+    } else if (progress?.read.status !== 'completed') {
+      targetType = 'read';
+    } else if (progress?.writte.status !== 'completed') {
+      targetType = 'writte';
+    }
+    console.log(targetType)
+    setOngoingModalVisible(false);
+    setPendingExamId(null);
+    window.open(`/video?id=${id}&type=${targetType}`, "_blank");
   };
 
   const handleSreachTestResult = (
@@ -177,6 +224,24 @@ const Dashboard = () => {
           })}
         </div>
       </div>
+
+      <Modal
+        title="考试未完成"
+        open={ongoingModalVisible}
+        onCancel={() => setOngoingModalVisible(false)}
+        footer={[
+          <Button key="continue" type="primary" onClick={() => pendingExamId && continueExam(pendingExamId)}>
+            继续考试
+          </Button>,
+          <Button key="restart" onClick={() => pendingExamId && startNewExam(pendingExamId)}>
+            开始新考试
+          </Button>,
+        ]}
+      >
+        <p>您有未完成的考试，是否继续？</p>
+        {/* <p style={{ marginTop: 12, color: '#666' }}>选择"继续考试"将回到之前的考试进度</p>
+        <p style={{ color: '#666' }}>选择"开始新考试"将清空所有数据</p> */}
+      </Modal>
     </div>
   );
 };

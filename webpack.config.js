@@ -223,7 +223,7 @@ module.exports = (env) => {
     devServer: {
       open: true, // 自动打开浏览器
       host: 'localhost', // 主机地址
-      port: 3000, // 端口号
+      port: 3001, // 端口号
       hot: true, // 启用热模块替换
       historyApiFallback: true, // 支持 SPA 路由（刷新不 404）
       allowedHosts: ['localhost', '127.0.0.1'], // 允许的主机

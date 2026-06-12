@@ -1,4 +1,3 @@
-
 import stores from '@/stores';
 import type { Exam, ExamType } from '@/typings/exam';
 import { autorun, runInAction, set } from 'mobx';
@@ -67,6 +66,11 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
     } else {
       placeholder.className = 'placeholder';
       placeholder.innerText = (prevCount + i + 1).toString(); // 显示序号
+      const persistedValue = localStorage.getItem(`answer-input-${stores.ExamStore.paperId}-${prevCount + i + 1}`) || '';
+      if (persistedValue) {
+        input.value = persistedValue;
+        placeholder.style.display = 'none';
+      }
     }
 
     input.addEventListener('focus', () => {
@@ -81,6 +85,7 @@ export function MyInput(index: number, span: any, prevCount: number, questionArr
     input.addEventListener('input', (e) => {
       const originalValue = input.value;
       const filteredValue = restrictChineseInput(originalValue);
+      localStorage.setItem(`answer-input-${stores.ExamStore.paperId}-${prevCount + i + 1}`, filteredValue);
 
       // 如果输入包含中文，则替换为过滤后的值
       if (originalValue !== filteredValue) {

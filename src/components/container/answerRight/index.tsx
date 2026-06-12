@@ -88,7 +88,7 @@ const columns: TableProps<{
       render: (_, record) => (
         <p style={{ overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px', whiteSpace: 'nowrap' }}>
           {record.studentAnswer || '未作答'}
-        </p >
+        </p>
       ),
     }
   ];
@@ -180,23 +180,23 @@ const AnswerRight = () => {
       }
 
       // 4. 根据 allSubItems 的总顺序分配模块：前40 -> 听力，接着40 -> 阅读，剩余 -> 写作
-      const totalSubItems = allSubItems.length;
-      const moduleForIndex: ('听力' | '阅读' | '写作')[] = [];
+      const totalSubItems = allSubItems.length - 2;
+      const moduleForIndex: ('听力' | '阅读')[] = [];
       for (let i = 0; i < totalSubItems; i++) {
         if (i < 40) moduleForIndex.push('听力');
         else if (i < 80) moduleForIndex.push('阅读');
-        else moduleForIndex.push('写作');
+        // else moduleForIndex.push('写作');
       }
-
+      // console.log(allSubItems)
       // 5. 给每个子项添加模块
-      const itemsWithModule = allSubItems.map((item, idx) => ({
+      const itemsWithModule = allSubItems.slice(0, 80).map((item, idx) => ({
         ...item,
         module: moduleForIndex[idx],
       }));
 
       // 6. 每个模块内重新编号（从1开始）
       const finalData: any[] = [];
-      const moduleCounter = { 听力: 0, 阅读: 0, 写作: 0 };
+      const moduleCounter = { 听力: 0, 阅读: 0 };
       for (const item of itemsWithModule) {
         const mod = item.module;
         moduleCounter[mod]++;
@@ -233,9 +233,7 @@ const AnswerRight = () => {
     }
   }, [stores.ExamStore.paperId, stores.UserStore.userId]);
 
-  useEffect(() => {
-    stores.AnswerStore.setTableData(tableData);
-  }, [tableData]);
+
 
   return (
     <div className="anrt">
@@ -243,11 +241,11 @@ const AnswerRight = () => {
         <button className="act">我的答案</button>
       </div>
       <div className="anrtContent">
-        <ScoreLie />
+        <ScoreLie tableData={tableData} />
         <div style={{ marginTop: 16 }}>
           <p style={{ textAlign: 'left', fontSize: '16px', fontWeight: '600', marginBottom: 8 }}>
             答题情况（共 {total} 题）
-          </p >
+          </p>
           <Table
             size="small"
             columns={columns}

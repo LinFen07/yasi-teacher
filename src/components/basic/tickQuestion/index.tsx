@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import TurndownService from 'turndown';
 import { Table } from 'antd';
-import { ExamType } from '@/typings/exam';
+import { ExamType, Exam } from '@/typings/exam';
 import './index.scss';
 import { computedTickPrevCount } from '@/utils/helper/computed';
 import stores from '@/stores';
@@ -22,8 +22,8 @@ interface RecordType {
   I?: string;
 }
 
-const tickQuestion = (questionArr: ExamType) => {
-  const PrevCount = computedTickPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam)
+const tickQuestion = (questionArr: ExamType & { exam?: Exam[] }) => {
+  const PrevCount = computedTickPrevCount(stores.ExamStore.currentExamTitle, questionArr.exam || [])
   const parseMarkdownToTableData = (markdown: string) => {
     const rows = markdown.trim().split('\n');
     const questionTitle = rows[2];

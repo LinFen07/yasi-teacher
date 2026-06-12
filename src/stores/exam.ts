@@ -349,17 +349,14 @@ class ExamStore {
   }
 
   getListenExam() {
-    this.changeCurrentExam(this.listenExam);
     return this.listenExam;
   }
 
   getReadExam() {
-    this.changeCurrentExam(this.readExam);
     return this.readExam;
   }
 
   getWritteExam() {
-    this.changeCurrentExam(this.wirrteExam);
     return this.wirrteExam;
   }
 

@@ -1,5 +1,4 @@
-
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Checkbox, Form, Input, Flex, message, Select, Cascader } from 'antd';
 import { fetchRegister, getExamMeal } from "@/api/register";
@@ -32,8 +31,12 @@ function LoginRoute(props: Props) {
 
   const fetchGetExamMeal = async (pageSize: number, pageNum: number) => {
     const res = await getExamMeal(pageSize, pageNum);
-    // @ts-ignore
-    setExamMeal(res.response.items);
+    try {
+      // @ts-ignore
+      setExamMeal(res.response.items);
+    } catch (error) {
+      //
+    }
   }
 
   useEffect(() => {
@@ -52,9 +55,9 @@ function LoginRoute(props: Props) {
       //@ts-ignore
       if (res.code == 1) {
         //@ts-ignore
-        stores.UserStore.login(res.response || res.data || {});
+        stores.UserStore.login(res.response);
         message.success('登录成功');
-        navigate('/layout/dashboard', { replace: true });
+        navigate('/layout/dashboard');
       }
       else {
         // @ts-ignore
@@ -94,7 +97,7 @@ function LoginRoute(props: Props) {
               style={{ maxWidth: 360 }}
               onFinish={onFinish}
             >
-              <p style={{ fontSize: '16px' }}>考试系统</p>
+              <p style={{ fontSize: '16px' }}>考试系统</p >
               <div className="lowin-group">
                 <label>用户名</label>
                 <Form.Item
@@ -219,12 +222,9 @@ function LoginRoute(props: Props) {
                       <Form.Item wrapperCol={{ span: 25, offset: 1 }}>
                         <Flex>
                           <Form.Item name="remember" valuePropName="checked" noStyle>
-                            <span>
-                              <Checkbox />
-                              <label className="rememberCheck">记住我</label>
-                            </span>
+                            <Checkbox></Checkbox><label className="rememberCheck">记住我</label>
                           </Form.Item>
-                          <label><a href="#"><b>忘记密码？</b></a></label>
+                          <label><a href=" "><b>忘记密码？</b></a ></label>
                         </Flex>
                       </Form.Item>
                     </div>
@@ -237,8 +237,8 @@ function LoginRoute(props: Props) {
                 <div style={{ height: '5px' }}></div>
                 {
                   props.data == 'register'
-                    ? <div>已有账号？ <a href="/login" className="login-link"><b>登录</b></a> </div>
-                    : <div>还没有账号？ <a href="/register" className="register-link"><b>注册</b></a></div>
+                    ? <div>已有账号？ <a href="/login" className="login-link"><b>登录</b></a > </div>
+                    : <div>还没有账号？ <a href="/register" className="register-link"><b>注册</b></a ></div>
                 }
               </Form.Item>
             </Form>

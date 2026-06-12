@@ -11,6 +11,21 @@ function stripTagsNormalize(input: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+// 去除 HTML 标签并处理常见实体
+export function stripHtmlTags(html: string): string {
+  if (!html) return '';
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  const textContent = tempDiv.textContent || tempDiv.innerText || '';
+  return textContent
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
 const studentAnswer: StudentAnswer = {
   // isCorrect: 0,
   // paperId: stores.ExamStore.paperId,

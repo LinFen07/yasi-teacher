@@ -5,7 +5,7 @@ import { ArrowLeftOutlined, ArrowRightOutlined } from "@ant-design/icons";
 import store from "@/stores";
 import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
-import { reaction } from "mobx";
+import { reaction, runInAction } from "mobx";
 
 type pageType = {
   title: string;
@@ -95,29 +95,39 @@ function footerNav(props: propType) {
 
   useEffect(() => {
     setPageArr(initialPageArr);
-    
+
     // 从localStorage恢复状态
     const savedIndex = store.ExamStore.currentExamIndex;
     const savedTitle = store.ExamStore.currentExamTitle;
-    
+
     setCurren(savedIndex);
-    
-    // 如果有保存的状态，使用保存的状态；否则使用默认状态
-    if (savedTitle && savedTitle !== "Part1") {
-      // 根据保存的currentExamIndex找到对应的页面信息
-      handleChangeTitle(savedIndex);
-    } else if (initialPageArr.length > 0) {
-      // 使用默认状态
-      store.ExamStore.changeCurrentTitle(initialPageArr[0].title);
-      store.ExamStore.changeTitleExpain(initialPageArr[0].headTitleExpain);
-    }
+
+    // 验证保存的标题是否在当前模块中存在
+    const titleExists = initialPageArr.some(page => page.title === savedTitle);
+    const savedIndexValid = initialPageArr.some(page => page.maxNum >= savedIndex);
+
+    runInAction(() => {
+      // 如果有保存的状态，且标题在当前模块中存在，则使用保存的状态
+      if (savedTitle && titleExists && savedIndexValid) {
+        // 根据保存的currentExamIndex找到对应的页面信息
+        handleChangeTitle(savedIndex);
+      } else if (initialPageArr.length > 0) {
+        // 使用默认状态（模块切换时标题不匹配，默认从 Part1 开始）
+        store.ExamStore.changeCurrentTitle(initialPageArr[0].title);
+        store.ExamStore.changeTitleExpain(initialPageArr[0].headTitleExpain);
+        store.ExamStore.changeCurrent(1);
+        setCurren(1);
+      }
+    });
   }, []);
 
   const activeAction = (num: number) => {
-    store.ExamStore.changeCurrent(num);
-    setCurren(store.ExamStore.currentExamIndex);
-    handleChangeTitle(num);
-    
+    runInAction(() => {
+      store.ExamStore.changeCurrent(num);
+      setCurren(store.ExamStore.currentExamIndex);
+      handleChangeTitle(num);
+    });
+
     // 保存页面状态到localStorage
     try {
       const state = {
@@ -134,18 +144,20 @@ function footerNav(props: propType) {
 
   const handleArrowAction = (arrow: string) => {
     let newIndex = curren;
-    if (arrow == "left") {
-      newIndex = curren - 1;
-      setCurren(newIndex);
-      store.ExamStore.changeCurrent(newIndex);
-      handleChangeTitle(newIndex);
-    } else if (arrow == "right") {
-      newIndex = curren + 1;
-      setCurren(newIndex);
-      store.ExamStore.changeCurrent(newIndex);
-      handleChangeTitle(newIndex);
-    }
-    
+    runInAction(() => {
+      if (arrow == "left") {
+        newIndex = curren - 1;
+        setCurren(newIndex);
+        store.ExamStore.changeCurrent(newIndex);
+        handleChangeTitle(newIndex);
+      } else if (arrow == "right") {
+        newIndex = curren + 1;
+        setCurren(newIndex);
+        store.ExamStore.changeCurrent(newIndex);
+        handleChangeTitle(newIndex);
+      }
+    });
+
     // 保存页面状态到localStorage
     try {
       const state = {

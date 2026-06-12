@@ -8,7 +8,7 @@ import IntegerStep from '@/components/basic/fontSizeSetting';
 import stores from '@/stores';
 import { requestConcurrency } from '@/utils/requestConcurrency';
 import { submitStudentWritteAnswer } from '@/utils/browser/submitAnswer';
-import { clearModuleData, safeSubmitAndClear } from '@/utils/helper/examDataManager';
+import { clearModuleData, safeSubmitAndClear, setModuleStatus } from '@/utils/helper/examDataManager';
 import { judgingProblem, submitAnswerBatch } from '@/api/studentAnswer';
 import questions from '@/components/basic/writteQuestions';
 
@@ -28,7 +28,7 @@ type propType = {
 };
 
 const HeadTip = forwardRef((props: propType) => {
-  const testTime: number = props.type == 'listen' ? 30 : 60;
+  const testTime: number = props.type == 'listen' ? 30 : 1;
   const examstore = stores.ExamStore;
 
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
@@ -54,9 +54,14 @@ const HeadTip = forwardRef((props: propType) => {
       }
 
       const tick = () => {
-        if (isModalOpen) return;
+        console.log('=== tick ===', 'type:', props.type, 'isModalOpen:', isModalOpen, 'startAt:', startAt, 'durationMs:', durationMs);
+        if (isModalOpen) {
+          console.log('Modal is open, skip tick');
+          return;
+        }
         const end = (startAt as number) + durationMs;
         const remain = Math.max(0, end - Date.now());
+        console.log('remain:', remain);
         setRemainingMs(remain);
         setMintnue(Math.floor(remain / 60000));
         setSeconds(Math.floor((remain % 60000) / 1000));
@@ -91,7 +96,7 @@ const HeadTip = forwardRef((props: propType) => {
         tick();
         intervalRef.current = window.setInterval(tick, 1000);
       }
-      if (stores.ExamStore.currentPageType === 'listen') {
+      if (['listen', 'read', 'writte'].includes(stores.ExamStore.currentPageType)) {
         initAudioAndCountDown()
       }
       return () => {
@@ -123,7 +128,7 @@ const HeadTip = forwardRef((props: propType) => {
     setRemainingMs(0);
 
     if (type === 'listen') {
-      // 使用安全提交和清理流程
+      // 使用安全提交和清理流程 
       const listenData = stores.AnswerStore.completedAnswers
         .map((item) => {
           if (item.questionId !== undefined) {
@@ -145,11 +150,12 @@ const HeadTip = forwardRef((props: propType) => {
         doTime: 0,
         id: stores.ExamStore.paperId,
         type: 'LISTENING',
-        userId: stores.UserStore.userId
+        userId: stores.UserStore.userId,
       }
       console.log(JSON.stringify(listenData_, null, 2))
       judgingProblem(listenData_);
       clearModuleData(type);
+      setModuleStatus(examstore.paperId, 'listen', 'completed');
       navigate(`/video?id=${examstore.paperId}&type=read`, { replace: true });
       // safeSubmitAndClear(
       //   () => requestConcurrency(stores.AnswerStore.completedAnswers),
@@ -192,6 +198,7 @@ const HeadTip = forwardRef((props: propType) => {
       // console.log(JSON.stringify(ReadData_, null, 2))
       judgingProblem(ReadData_)
       clearModuleData(type);
+      setModuleStatus(examstore.paperId, 'read', 'completed');
       navigate(`/video?id=${examstore.paperId}&type=writte`, { replace: true });
       // safeSubmitAndClear(
       //   () => requestConcurrency(stores.AnswerStore.completedAnswers),
@@ -215,7 +222,8 @@ const HeadTip = forwardRef((props: propType) => {
         // console.log('准备提交写作答案:', JSON.stringify(stores.AnswerStore.writingAnswers, null, 2));
 
         submitAnswerBatch(stores.AnswerStore.writingAnswers)
-        navigate(`/video?id=${examstore.paperId}&type=end`, { replace: true });
+        setModuleStatus(examstore.paperId, 'writte', 'completed');
+        navigate('/testOver', { replace: true });
         // 使用安全提交和清理流程 - 考试完成时清除所有数据
         // safeSubmitAndClear(
         //   () => requestConcurrency(stores.AnswerStore.writingAnswers),
@@ -231,7 +239,8 @@ const HeadTip = forwardRef((props: propType) => {
         // );
       } catch (error) {
         // console.error('准备写作答案时出错:', error);
-        navigate(`/video?id=${examstore.paperId}&type=end`, { replace: true });
+        setModuleStatus(examstore.paperId, 'writte', 'completed');
+        navigate('/testOver', { replace: true });
       }
     }
     examstore.changeCurrent(1);

@@ -1,14 +1,16 @@
 import echarts from '@/utils/contants/echarts';
 import { useEffect, useState } from 'react';
-import { getAnswerList } from '@/api/studentAnswer';
 import stores from '@/stores';
 import './index.scss';
 import { Button } from 'antd'
-import { table } from 'console';
 
 type EChartsOption = any;
 
-export default function ScoreLie() {
+interface ScoreLieProps {
+  tableData: any[];
+}
+
+export default function ScoreLie({ tableData }: ScoreLieProps) {
   const [chartData, setChartData] = useState({
     correctCount: 0,
     inCorrectCount: 0,
@@ -17,9 +19,9 @@ export default function ScoreLie() {
   const [isdisable, setDisable] = useState(false)
   const [moduleNow, setModule] = useState('听力')
   const [score, setScore] = useState(0)
-  const answerRes = stores.AnswerStore.tableData
   // console.log(JSON.stringify(answerRes, null, 2))
   const computeListen = () => {
+    const answerRes = tableData
     let correctCount = 0;
     let inCorrectCount = 0;
     let noAnswer = 0;
@@ -45,6 +47,7 @@ export default function ScoreLie() {
     setScore(score)
   }
   const computeRead = () => {
+    const answerRes = tableData
     let correctCount = 0;
     let inCorrectCount = 0;
     let noAnswer = 0;
@@ -83,7 +86,7 @@ export default function ScoreLie() {
 
   useEffect(() => {
     computeListen()
-  }, [stores.AnswerStore.tableData])
+  }, [tableData])
 
   useEffect(() => {
     const fetchAndRenderChart = async () => {
@@ -95,9 +98,9 @@ export default function ScoreLie() {
         const option: EChartsOption = {
           color: ['#22c17c', '#f05533', '#e2e2e2'],
           title: {
-            text: `${moduleNow}得分:${score}`,
+            text: `${moduleNow}`,
             subtext: '',
-            left: '10px',
+            left: '25px',
             top: '10px',
           },
           tooltip: {
@@ -141,7 +144,7 @@ export default function ScoreLie() {
     if (stores.ExamStore.paperId && stores.UserStore.userId) {
       fetchAndRenderChart();
     }
-  }, [stores.ExamStore.paperId, stores.UserStore.userId, score, moduleNow, stores.AnswerStore.tableData]); // 添加依赖项
+  }, [stores.ExamStore.paperId, stores.UserStore.userId, score, moduleNow, stores.AnswerStore.tableData, chartData]); // 添加依赖项
 
   return (
     <>

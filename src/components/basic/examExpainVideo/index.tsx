@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import stores from "@/stores";
 import { observer } from "mobx-react";
+import { setModuleStatus } from "@/utils/helper/examDataManager";
 
 type AudioStatus = "checking" | "preparing" | "ready" | "error";
 
-const ExamExplainVideo = observer(({ type }: { type: string }) => {
+const ExamExplainVideo = observer(({ type, isAvailable = true, shouldReset = true }: { type: string; isAvailable?: boolean; shouldReset?: boolean }) => {
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [audioStatus, setAudioStatus] = useState<AudioStatus>("checking");
@@ -107,6 +108,11 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
   }, [type, stores.ExamStore.paperId]);
 
   const handlerStart = () => {
+    if (!isAvailable) {
+      message.warning("该模块已完成或不可访问");
+      return;
+    }
+
     if (type === "listen" && audioStatus !== "ready") {
       if (audioStatus === "checking") {
         message.warning("音频检查中，请稍候...");
@@ -118,12 +124,14 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
       return;
     }
 
+    setModuleStatus(stores.ExamStore.paperId, type as 'listen' | 'read' | 'writte', 'in_progress');
+
     if (type === "listen") {
-      navigate(`/listeningExam`);
+      navigate(`/listeningExam?id=${stores.ExamStore.paperId}&shouldReset=${shouldReset}`);
     } else if (type === "read") {
-      navigate(`/readnExam`);
+      navigate(`/readnExam?id=${stores.ExamStore.paperId}&shouldReset=${shouldReset}`);
     } else if (type === "writte") {
-      navigate(`/writteExam`);
+      navigate(`/writteExam?id=${stores.ExamStore.paperId}&shouldReset=${shouldReset}`);
     }
   };
 
@@ -172,10 +180,11 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
                   <button
                     className="video-confirm-button"
                     onClick={handlerStart}
-                    style={{ marginTop: "16px", opacity: type === "listen" && audioStatus !== "ready" ? 0.5 : 1, cursor: type === "listen" && audioStatus !== "ready" ? "not-allowed" : "pointer" }}
+                    disabled={!isAvailable || (type === "listen" && audioStatus !== "ready")}
+                    style={{ marginTop: "16px", opacity: !isAvailable || (type === "listen" && audioStatus !== "ready") ? 0.5 : 1, cursor: !isAvailable || (type === "listen" && audioStatus !== "ready") ? "not-allowed" : "pointer" }}
                   >
                     <ArrowRightOutlined style={{ marginRight: "12px" }} />
-                    Start {title}
+                    {isAvailable ? `Start ${title}` : '已锁定'}
                   </button>
                 ) : (
                   <div className="video-confirm-container">
@@ -187,8 +196,10 @@ const ExamExplainVideo = observer(({ type }: { type: string }) => {
                     <button
                       className="video-confirm-button"
                       onClick={() => setIsConfirmed(true)}
+                      disabled={!isAvailable}
+                      style={{ opacity: !isAvailable ? 0.5 : 1, cursor: !isAvailable ? "not-allowed" : "pointer" }}
                     >
-                      <CheckOutlined style={{ marginRight: "12px" }} />I confirm
+                      <CheckOutlined style={{ marginRight: "12px" }} />I confirm {!isAvailable && '(已锁定)'}
                     </button>
                   </div>
                 )}

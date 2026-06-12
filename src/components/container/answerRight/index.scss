@@ -1,8 +1,9 @@
-.anrt{
+.anrt {
   width: 49%;
   height: 100%;
   margin-left: 1%;
-  .anrtHead{
+
+  .anrtHead {
     width: 100%;
     height: 50px;
     text-align: center;
@@ -10,25 +11,30 @@
     font-size: 18px;
     font-weight: 700;
     display: flex;
-    button{
+
+    button {
       width: 100px;
       margin-left: 1vh;
       background-color: var(--color-primary);
       border: 0px;
       cursor: pointer;
     }
-    button:nth-child(1){
+
+    button:nth-child(1) {
       margin-left: 0;
     }
-    .act{
+
+    .act {
       background-color: #fff;
     }
   }
-  .anrtContent{
+
+  .anrtContent {
     width: 100%;
-    height: 100%;
+    height: 93%;
     background-color: #fff;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .answer-html {

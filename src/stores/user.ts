@@ -64,23 +64,23 @@ class UserStore {
   }
 
   login(loginData: {
-    token?: string;
-    tokenType?: string;
-    expiresIn?: number;
-    user?: {
-      realName?: string;
-      role?: number;
-      id?: number;
-      userName?: string;
+    token: string;
+    tokenType: string;
+    expiresIn: number;
+    user: {
+      realName: string;
+      role: number;
+      id: number;
+      userName: string;
     }
   }): void {
-    this.token = loginData.token || '';
-    this.tokenType = loginData.tokenType || '';
-    this.expiresIn = loginData.expiresIn || 0;
-    this.name = loginData.user?.realName || '';
-    this.userId = loginData.user?.id || 1;
-    this.role = loginData.user?.role || 1;
-    this.userName = loginData.user?.userName || '';
+    this.token = loginData.token;
+    this.tokenType = loginData.tokenType;
+    this.expiresIn = loginData.expiresIn;
+    this.name = loginData.user.realName;
+    this.userId = loginData.user.id;
+    this.role = loginData.user.role;
+    this.userName = loginData.user.userName;
     this.cookies = `token=${this.token}`;
     this.key = 'token';
     localStorage.setItem(this.key, this.token);

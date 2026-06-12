@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { ExamType } from "@/typings/exam";
+import { ExamType, Exam } from "@/typings/exam";
 import TurndownService from 'turndown';
 import './index.scss';
 import stores from '@/stores';
@@ -76,7 +76,7 @@ const DropTarget = ({ questionIndex, onDrop, onRemove, droppedItems }: DropTarge
   );
 };
 
-export default function DragQuestion(questionArr: ExamType) {
+export default function DragQuestion(questionArr: ExamType & { exam?: Exam[] }) {
   function parseMarkdownToQuestionData(markdown: string) {
     const lines = markdown.split('\n').map(line => line.trim());
 
@@ -149,7 +149,7 @@ export default function DragQuestion(questionArr: ExamType) {
     setLocalOptions(initialLocalOptions);
   }, []);
 
-  const dragPrevCount = computedDragPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+   const dragPrevCount = computedDragPrevCount(stores.ExamStore.currentExamTitle, questionArr.exam || []);
   const handleDrop = (item: { option: string; index: number }, questionIndex: number) => {
     submitStudentBlankAnswer(questionArr, questionIndex, dragPrevCount, item.option[0], questionIndex, `${questionIndex + 1}`)
     stores.ExamStore.changeCurrent(dragPrevCount + questionIndex + 1);

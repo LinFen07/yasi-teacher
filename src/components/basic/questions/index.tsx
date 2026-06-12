@@ -15,7 +15,8 @@ import DragQuestion from "../dragQuestion";
 import SelectQuestion from "../selectQuestion";
 import { Exam, StudentAnswer } from "@/typings/exam";
 import { judgingProblem } from '@/api/studentAnswer'
-function questions({ exam }: { exam: Exam[] }) {
+
+function questions({ exam, shouldReset = true }: { exam: Exam[]; shouldReset?: boolean }) {
   const [listensArr, setListensArr] = useState(exam[0]);
   const [questionsArr, setQuestionArr] = useState(listensArr.questionItems);
   const titleRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -28,14 +29,8 @@ function questions({ exam }: { exam: Exam[] }) {
   }, [stores.ExamStore.currentExamTitle]);
 
   useEffect(() => {
-    const hasExistingAnswers = stores.AnswerStore.completedAnswers.some((item: any) => {
-      return item && typeof item === 'object' && (item.content || item.studentAnswer);
-    });
+    if (shouldReset === false) return;
 
-    if (hasExistingAnswers) {
-      return;
-    }
-    console.log(7777777)
     const initAnswers: any = exam.flatMap((item, index) => {
       return item.questionItems.flatMap((questionItem, index2) => {
         // console.log(JSON.stringify(questionItem, null, 2))
@@ -90,11 +85,26 @@ function questions({ exam }: { exam: Exam[] }) {
         }
       })
     })
-    stores.AnswerStore.initAnswer(initAnswers)
-  }, [exam])
+
+    const savedAnswers = stores.AnswerStore.completedAnswers;
+    if (Array.isArray(savedAnswers) && savedAnswers.length > 0) {
+      const restoredAnswers = initAnswers.map((answer: any, idx: number) => {
+        const savedAnswer = savedAnswers[idx];
+        if (!savedAnswer) return answer;
+        return {
+          ...answer,
+          content: savedAnswer.content ?? answer.content,
+          prefix: savedAnswer.prefix ?? answer.prefix,
+        };
+      });
+      stores.AnswerStore.initAnswer(restoredAnswers)
+    } else {
+      stores.AnswerStore.initAnswer(initAnswers)
+    }
+  }, [exam, shouldReset])
 
   const onChange = (index: number) => (e: any) => {
-    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
     const beforeCount = questionsArr
       .slice(0, index)
       .reduce(
@@ -133,7 +143,7 @@ function questions({ exam }: { exam: Exam[] }) {
       finalValues = checkedValues.slice(-2);
     }
 
-    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
     const beforeCount = questionsArr
       .slice(0, index)
       .reduce(
@@ -182,7 +192,7 @@ function questions({ exam }: { exam: Exam[] }) {
   };
 
   useEffect(() => {
-    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, stores.ExamStore.currentExam);
+    const pre = computedPrevCount(stores.ExamStore.currentExamTitle, exam);
     let currentIndexInPart = questionIndex - pre - 1;
     let accumulated = 0;
     let foundIndex = -1;
@@ -322,10 +332,10 @@ function questions({ exam }: { exam: Exam[] }) {
     <div className="listencontent">
       {questionsArr.map((questionArr, index) => (
         <div key={index}>
-          {questionArr.topicType == "5" ? (
-            <TickQuestion {...questionArr}></TickQuestion>
+                   {questionArr.topicType == "5" ? (
+            <TickQuestion {...questionArr} exam={exam}></TickQuestion>
           ) : questionArr.topicType == "6" ? (
-            <DragQuestion {...questionArr}></DragQuestion>
+            <DragQuestion {...questionArr} exam={exam}></DragQuestion>
           ) : questionArr.topicType == "4" ? (
             <div>{parse(cleanQuestionContent(replaceFontSize(questionArr.title, fontSize)))}</div>
           ) : (

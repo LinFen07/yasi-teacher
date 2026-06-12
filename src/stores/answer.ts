@@ -39,21 +39,20 @@ class AnswerStore {
   readTrueCount: number = 0;
   appraise: string = "";
 
-  fullReset() {
-    const data = {
-      tickAnswers: [],
-      dragAnswers: Array(10).fill(""),
-      completedAnswers: Array(40).fill(""),
-      writingAnswers: Array(2).fill(""),
-      correct: this.correct,
-      listenTotalSorce: this.listenTotalSorce,
-      readTotalSorce: this.readTotalSorce,
-      listenTrueCount: this.listenTrueCount,
-      readTrueCount: this.readTrueCount,
+  // 模块提交验证结果存储（用于本地正确性检查）
+  submissionResults: Array<{
+    module: string;
+    validationResult: {
+      total: number;
+      correctCount: number;
+      results: Array<{ questionId: number; isCorrect: boolean; correctAnswer: string }>;
     };
-    localStorage.setItem("answerStore", JSON.stringify(data));
+  }> = [];
 
-    // 同时清空 tableData
+  fullReset() {
+    this.resetToDefaults();
+    localStorage.removeItem("answerStore");
+    this.clearPersistedDrafts();
     this.clearTableData();
   }
 
@@ -110,6 +109,24 @@ class AnswerStore {
     }
   }
 
+  // 设置模块提交验证结果
+  setSubmissionResult(result: {
+    module: string;
+    validationResult: {
+      total: number;
+      correctCount: number;
+      results: Array<{ questionId: number; isCorrect: boolean; correctAnswer: string }>;
+    };
+  }) {
+    // 替换同一模块的旧结果，保留其他模块的结果
+    const existingIndex = this.submissionResults.findIndex(r => r.module === result.module);
+    if (existingIndex >= 0) {
+      this.submissionResults[existingIndex] = result;
+    } else {
+      this.submissionResults.push(result);
+    }
+  }
+
   resetToDefaults() {
     this.tickAnswers = [];
     this.dragAnswers = Array(10).fill("");
@@ -122,6 +139,7 @@ class AnswerStore {
     this.listenTrueCount = 0;
     this.readTrueCount = 0;
     this.appraise = "";
+    this.submissionResults = [];
   }
 
   resetLocalStorage() {
@@ -140,6 +158,12 @@ class AnswerStore {
   clearTableData() {
     this.tableData = [];
     localStorage.removeItem("tableData");
+  }
+
+  clearPersistedDrafts() {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith("answer-input-"))
+      .forEach((key) => localStorage.removeItem(key));
   }
 
   // 获取统计数据

@@ -24,3 +24,7 @@ yarn-error.log*
 
 package-lock.json
 pnpm-lock.yaml
+
+# IDE
+.cursor
+claude.md
